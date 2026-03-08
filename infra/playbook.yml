@@ -4,3 +4,9 @@
   tasks: 
     - name: Ping the server
       ping:
+
+- name: Setup Infrastructure
+  hosts: all
+  become: yes
+  roles:
+    - incus-setup
