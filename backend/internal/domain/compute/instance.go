@@ -22,6 +22,7 @@ const (
 	StatusStopped  InstanceStatus = "stopped"
 	StatusRunnning InstanceStatus = "running"
 	StatePending   InstanceStatus = "pending"
+	StatusDeleting InstanceStatus = "deleting"
 	StatusError    InstanceStatus = "error"
 )
 
