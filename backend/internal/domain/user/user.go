@@ -31,7 +31,7 @@ type User struct {
 	id          UserID
 	displayName string
 	permissions []Permission
-	quota       UsageQuota 
+	quota       UsageQuota
 }
 
 // --- Constructor ---
@@ -45,9 +45,9 @@ func NewUser(id UserID, name string, perms []Permission, quota UsageQuota) *User
 }
 
 // --- Getters ---
-func (u *User) ID() UserID { return u.id }
+func (u *User) ID() UserID          { return u.id }
 func (u *User) DisplayName() string { return u.displayName }
-func (u *User) Quota() UsageQuota { return u.quota }
+func (u *User) Quota() UsageQuota   { return u.quota }
 
 // --- Setters / Domain Logic ---
 func (u *User) UpdateQuota(newQuota UsageQuota) {
