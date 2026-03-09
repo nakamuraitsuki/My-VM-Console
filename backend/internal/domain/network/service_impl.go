@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"errors"
+	"net"
 	"net/netip"
 )
 
@@ -35,7 +36,7 @@ func (s *networkService) CalculateNextAvailableIP(
 		if err != nil {
 			continue // 無効なIPはスキップ
 		}
-		blockedMap[ip] = struct{}{}
+		blockedMap[ip.Unmap()] = struct{}{}
 	}
 
 	base := prefix.Addr()
@@ -44,69 +45,54 @@ func (s *networkService) CalculateNextAvailableIP(
 		for j := 0; j < offset; j++ {
 			target = target.Next()
 		}
-		blockedMap[target] = struct{}{}
+		blockedMap[target.Unmap()] = struct{}{}
 	}
 
-	lastAddr := s.broadcastAddress(prefix)
+	lastAddr := s.broadcastAddress(prefix).Unmap()
 	blockedMap[lastAddr] = struct{}{}
 
 	addr := base
 
 	for {
-		// サブネットの範囲を超えたら終了
-		if !prefix.Contains(addr) {
+		current := addr.Unmap()
+
+		if !prefix.Contains(current) {
 			break
 		}
 
-		if s.isValidIP(addr, prefix, lastAddr, blockedMap) {
-			return addr.String(), nil
+		if _, blocked := blockedMap[current]; !blocked {
+			return current.String(), nil
 		}
 
 		addr = addr.Next()
+		if !addr.IsValid() {
+			break
+		}
 	}
 
 	return "", errors.New("no available IP addresses in subnet")
 }
 
-func (s *networkService) isValidIP(
-	addr netip.Addr,
-	prefix netip.Prefix,
-	last netip.Addr,
-	blockedMap map[netip.Addr]struct{},
-) bool {
-	if addr == prefix.Addr() {
-		return false // ネットワークアドレス
-	}
-	if addr == last {
-		return false // ブロードキャストアドレス
-	}
-	if _, exists := blockedMap[addr]; exists {
-		return false // 使用済み
-	}
-	return true
-}
-
 // helper: ブロードキャストアドレスの計算
 func (s *networkService) broadcastAddress(prefix netip.Prefix) netip.Addr {
-	// ネットワークアドレスをバイトスライスで取得
-	naddr := prefix.Addr().As16()
-	// マスクを取得 (例: /24 なら 24)
-	maskLen := prefix.Bits()
+	addrBytes := prefix.Addr().As16()
 
-	// IPv4 (32bit) か IPv6 (128bit) かで処理を分ける
-	isIPv4 := prefix.Addr().Is4()
-	totalBits := 128
-	if isIPv4 {
-		totalBits = 32
+	// アドレスがIPv4かIPv6かで、マスクの適用範囲を変える
+	var mask net.IPMask
+	if prefix.Addr().Is4() {
+		// IPv4の場合、マスクは32ビット分
+		mask = net.CIDRMask(prefix.Bits(), 32)
+		// IPv4-mapped IPv6は末尾4バイト(12-15)に実体がある
+		for i := range 4 {
+			addrBytes[12+i] |= ^mask[i]
+		}
+	} else {
+		// IPv6の場合
+		mask = net.CIDRMask(prefix.Bits(), 128)
+		for i := range 16 {
+			addrBytes[i] |= ^mask[i]
+		}
 	}
 
-	// ホスト部のビットをすべて1にする操作
-	for i := maskLen; i < totalBits; i++ {
-		// IPv4の場合は末尾4バイト(12〜15)を操作する
-		byteIdx := (128 - totalBits + i) / 8
-		bitIdx := uint(7 - (i % 8))
-		naddr[byteIdx] |= (1 << bitIdx)
-	}
-
-	return netip.AddrFrom16(naddr)
+	return netip.AddrFrom16(addrBytes)
 }
