@@ -7,3 +7,17 @@ type Lease struct {
 	TargetID  string
 	IPAddress string
 }
+
+// --- Constructor ---
+
+func NewLease(
+	subnetID SubnetID,
+	targetID string,
+	ipAddress string,
+) *Lease {
+	return &Lease{
+		SubnetID:  subnetID,
+		TargetID:  targetID,
+		IPAddress: ipAddress,
+	}
+}

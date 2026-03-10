@@ -11,7 +11,7 @@ import (
 
 var (
 	ErrInstanceAlreadyRunning = errors.New("instance is already running")
-	ErrInstanceNotRunnning    = errors.New("instance is not running")
+	ErrInstanceNotRunning    = errors.New("instance is not running")
 )
 
 type InstanceID string
@@ -20,7 +20,7 @@ type InstanceStatus string
 
 const (
 	StatusStopped  InstanceStatus = "stopped"
-	StatusRunnning InstanceStatus = "running"
+	StatusRunning InstanceStatus = "running"
 	StatePending   InstanceStatus = "pending"
 	StatusDeleting InstanceStatus = "deleting"
 	StatusError    InstanceStatus = "error"
@@ -52,6 +52,7 @@ func NewInstance(
 	id InstanceID,
 	name string,
 	owner user.UserID,
+	status InstanceStatus,
 	cpu, memoryMB int,
 	imageID image.ImageID,
 	subnetID network.SubnetID,
@@ -62,7 +63,7 @@ func NewInstance(
 		id:           id,
 		name:         name,
 		ownerID:      owner,
-		status:       StatusStopped,
+		status:       status,
 		cpu:          cpu,
 		memoryMB:     memoryMB,
 		imageID:      imageID,

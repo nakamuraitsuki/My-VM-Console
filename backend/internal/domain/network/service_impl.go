@@ -7,6 +7,10 @@ import (
 	"net/netip"
 )
 
+var (
+	ErrNoAvailableIPs = errors.New("no available IP addresses in the subnet")
+)
+
 type networkService struct {
 	reservedOffsets []int // 予約済みIP
 }
@@ -70,7 +74,7 @@ func (s *networkService) CalculateNextAvailableIP(
 		}
 	}
 
-	return "", errors.New("no available IP addresses in subnet")
+	return "", ErrNoAvailableIPs
 }
 
 // helper: ブロードキャストアドレスの計算
