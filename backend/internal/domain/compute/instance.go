@@ -11,7 +11,8 @@ import (
 
 var (
 	ErrInstanceAlreadyRunning = errors.New("instance is already running")
-	ErrInstanceNotRunning    = errors.New("instance is not running")
+	ErrInstanceNotRunning     = errors.New("instance is not running")
+	ErrInvalidInstanceStatus  = errors.New("invalid instance status")
 )
 
 type InstanceID string
@@ -20,8 +21,8 @@ type InstanceStatus string
 
 const (
 	StatusStopped  InstanceStatus = "stopped"
-	StatusRunning InstanceStatus = "running"
-	StatePending   InstanceStatus = "pending"
+	StatusRunning  InstanceStatus = "running"
+	StatusPending  InstanceStatus = "pending"
 	StatusDeleting InstanceStatus = "deleting"
 	StatusError    InstanceStatus = "error"
 )
@@ -82,3 +83,12 @@ func (i *Instance) ImageID() image.ImageID         { return i.imageID }
 func (i *Instance) SubnetID() network.SubnetID     { return i.subenetID }
 func (i *Instance) PrivateIP() string              { return i.privateIP }
 func (i *Instance) RootVolumeID() storage.VolumeID { return i.rootVolumeID }
+
+// --- Setters ---
+func (i *Instance) CreateInstance() error {
+	if i.status != StatusPending {
+		return ErrInvalidInstanceStatus
+	}
+	i.status = StatusRunning
+	return nil
+}
