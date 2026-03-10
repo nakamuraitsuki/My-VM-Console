@@ -31,11 +31,6 @@ type RequestCreateInstanceOutput struct {
 	PrivateIP  string
 }
 
-//　あとでExecutorに移す(最小限にする)
-type CreateInstancePayload struct {
-	InstanceID compute.InstanceID
-}
-
 type RequestCreateInstanceUseCase interface {
 	Execute(ctx context.Context, req RequestCreateInstanceInput) (*RequestCreateInstanceOutput, error)
 }
@@ -43,14 +38,16 @@ type RequestCreateInstanceUseCase interface {
 type requestCreateInstanceInteractor struct {
 	instanceRepo   compute.InstanceRepository
 	networkRepo    network.Repository
+	storageRepo    storage.Repository
 	networkService network.NetworkService
-	publisher 	 usecase.JobPublisher
+	publisher      usecase.JobPublisher
 	uow            usecase.UnitOfWork
 }
 
 func NewRequestCreateInstanceInteractor(
 	instanceRepo compute.InstanceRepository,
 	networkRepo network.Repository,
+	storageRepo storage.Repository,
 	networkService network.NetworkService,
 	publisher usecase.JobPublisher,
 	uow usecase.UnitOfWork,
@@ -58,8 +55,9 @@ func NewRequestCreateInstanceInteractor(
 	return &requestCreateInstanceInteractor{
 		instanceRepo:   instanceRepo,
 		networkRepo:    networkRepo,
+		storageRepo:    storageRepo,
 		networkService: networkService,
-		publisher:        publisher,
+		publisher:      publisher,
 		uow:            uow,
 	}
 }
@@ -134,6 +132,20 @@ func (i *requestCreateInstanceInteractor) Execute(
 			return err
 		}
 
+		// volume 予約
+		volumeID := storage.VolumeID("volume-" + uuid.New().String())
+		defaultSize := 20 // GB
+		volume := storage.NewVolume(
+			volumeID,
+			req.Name+"-root",
+			defaultSize,
+			"zfs", // 仮のプール名
+			string(req.OwnerID),
+		)
+		if err := i.storageRepo.Save(ctx, volume); err != nil {
+			return err
+		}
+
 		// Save Entity
 		inst := compute.NewInstance(
 			instanceID,
@@ -145,7 +157,7 @@ func (i *requestCreateInstanceInteractor) Execute(
 			req.ImageID,
 			targetSubnet.ID(),
 			IPAddress,
-			storage.VolumeID("volume-"+uuid.New().String()),
+			volume.ID(),
 		)
 
 		if err := i.instanceRepo.Save(ctx, inst); err != nil {

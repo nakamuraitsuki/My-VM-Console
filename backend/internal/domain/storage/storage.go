@@ -9,3 +9,19 @@ type Volume struct {
 	pool   string // zfs, btrfs, dir など
 	owner  string
 }
+
+func NewVolume(id VolumeID, name string, sizeGB int, pool string, owner string) *Volume {
+	return &Volume{
+		id:     id,
+		name:   name,
+		sizeGB: sizeGB,
+		pool:   pool,
+		owner:  owner,
+	}
+}
+
+func (v *Volume) ID() VolumeID { return v.id }
+func (v *Volume) Name() string { return v.name }
+func (v *Volume) SizeGB() int { return v.sizeGB }
+func (v *Volume) Pool() string { return v.pool }
+func (v *Volume) Owner() string { return v.owner }
