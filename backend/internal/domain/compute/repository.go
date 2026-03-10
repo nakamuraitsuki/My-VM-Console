@@ -1,6 +1,13 @@
 package compute
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+var (
+	ErrInstanceNotFound = errors.New("instance not found")
+)
 
 type InstanceRepository interface {
 	FindByID(ctx context.Context, id InstanceID) (*Instance, error)

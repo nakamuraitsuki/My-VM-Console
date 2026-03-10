@@ -20,18 +20,30 @@ type InstanceID string
 type InstanceStatus string
 
 const (
-	StatusStopped  InstanceStatus = "stopped"
-	StatusRunning  InstanceStatus = "running"
 	StatusPending  InstanceStatus = "pending"
+	StatusCreating InstanceStatus = "creating"
+	StatusStarting InstanceStatus = "starting"
+	StatusRunning  InstanceStatus = "running"
+	StatusStopping InstanceStatus = "stopping"
+	StatusStopped  InstanceStatus = "stopped"
 	StatusDeleting InstanceStatus = "deleting"
 	StatusError    InstanceStatus = "error"
 )
 
+type ErrPhase string
+
+const (
+	ErrInPending  ErrPhase = "error in pending"
+	ErrInCreating ErrPhase = "error in creating"
+	ErrInStarting ErrPhase = "error in starting"
+)
+
 type Instance struct {
-	id      InstanceID
-	name    string
-	ownerID user.UserID
-	status  InstanceStatus
+	id         InstanceID
+	name       string
+	ownerID    user.UserID
+	status     InstanceStatus
+	errorPhase *ErrPhase // エラー理由（エラー状態のときのみ値が入る）
 
 	// スペック
 	cpu      int
@@ -54,6 +66,7 @@ func NewInstance(
 	name string,
 	owner user.UserID,
 	status InstanceStatus,
+	errorPhase *ErrPhase,
 	cpu, memoryMB int,
 	imageID image.ImageID,
 	subnetID network.SubnetID,
@@ -65,6 +78,7 @@ func NewInstance(
 		name:         name,
 		ownerID:      owner,
 		status:       status,
+		errorPhase:   errorPhase,
 		cpu:          cpu,
 		memoryMB:     memoryMB,
 		imageID:      imageID,
@@ -85,10 +99,34 @@ func (i *Instance) PrivateIP() string              { return i.privateIP }
 func (i *Instance) RootVolumeID() storage.VolumeID { return i.rootVolumeID }
 
 // --- Setters ---
-func (i *Instance) CreateInstance() error {
-	if i.status != StatusPending {
-		return ErrInvalidInstanceStatus
+
+// 状態確認ののち、「作成中」状態に遷移させる
+func (i *Instance) MarkAsCreating() error {
+	if i.status == StatusPending || i.status == StatusError {
+		i.status = StatusCreating
+		return nil
 	}
-	i.status = StatusRunning
-	return nil
+	return ErrInvalidInstanceStatus
+}
+
+func (i *Instance) MarkAsStarting() error {
+	if i.status == StatusCreating || i.status == StatusStopped || i.status == StatusError {
+		i.status = StatusStarting
+		return nil
+	}
+	return ErrInvalidInstanceStatus
+}
+
+func (i *Instance) MarkAsRunning() error {
+	if i.status == StatusStarting {
+		i.status = StatusRunning
+		return nil
+	}
+	return ErrInvalidInstanceStatus
+}
+
+// エラー状態に遷移させる
+func (i *Instance) MarkAsError(errorPhase ErrPhase) {
+	i.status = StatusError
+	i.errorPhase = &errorPhase
 }

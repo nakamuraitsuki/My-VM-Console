@@ -152,6 +152,7 @@ func (i *requestCreateInstanceInteractor) Execute(
 			req.Name,
 			req.OwnerID,
 			compute.StatusPending, // 初期状態はPending
+			nil,
 			req.CPU,
 			req.Memory,
 			req.ImageID,
