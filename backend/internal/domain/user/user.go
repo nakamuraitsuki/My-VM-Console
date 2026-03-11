@@ -66,6 +66,19 @@ func (u *User) HasPermission(perm Permission) bool {
 	return false
 }
 
+func (u *User) CanAllocateResources(currentInstances, requestedCPU, requestedMemory int) error {
+	if currentInstances+1 > u.quota.MaxInstance {
+		return ErrQuotaExceeded
+	}
+	if requestedCPU > u.quota.MaxCPU {
+		return ErrQuotaExceeded
+	}
+	if requestedMemory > u.quota.MaxMemory {
+		return ErrQuotaExceeded
+	}
+	return nil
+}
+
 func (u *User) CanAllocateInstance(currentInstances, requestedCPU int) error {
 	if currentInstances+1 > u.quota.MaxInstance {
 		return ErrQuotaExceeded

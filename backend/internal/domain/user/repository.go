@@ -1,6 +1,13 @@
 package user
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+var (
+	ErrUserNotFound = errors.New("user not found")
+)
 
 type UserPersistentData struct {
 	ID    UserID
