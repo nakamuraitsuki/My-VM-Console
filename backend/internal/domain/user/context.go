@@ -1,6 +1,13 @@
 package user
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+var (
+	ErrUserNotInContext = errors.New("user not found in context")
+)
 
 type ctxKey struct{}
 

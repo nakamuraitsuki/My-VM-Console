@@ -36,6 +36,7 @@ type RequestCreateInstanceUseCase interface {
 }
 
 type requestCreateInstanceInteractor struct {
+	userRepo       user.UserRepository
 	instanceRepo   compute.InstanceRepository
 	networkRepo    network.Repository
 	storageRepo    storage.Repository
@@ -45,6 +46,7 @@ type requestCreateInstanceInteractor struct {
 }
 
 func NewRequestCreateInstanceInteractor(
+	userRepo user.UserRepository,
 	instanceRepo compute.InstanceRepository,
 	networkRepo network.Repository,
 	storageRepo storage.Repository,
@@ -53,6 +55,7 @@ func NewRequestCreateInstanceInteractor(
 	uow usecase.UnitOfWork,
 ) RequestCreateInstanceUseCase {
 	return &requestCreateInstanceInteractor{
+		userRepo:       userRepo,
 		instanceRepo:   instanceRepo,
 		networkRepo:    networkRepo,
 		storageRepo:    storageRepo,
@@ -66,6 +69,24 @@ func (i *requestCreateInstanceInteractor) Execute(
 	ctx context.Context,
 	req RequestCreateInstanceInput,
 ) (*RequestCreateInstanceOutput, error) {
+	// check user permissions
+	usr, ok := user.FromContext(ctx)
+	if !ok {
+		return nil, user.ErrUserNotInContext
+	}
+
+	if !usr.HasPermission(user.PermissionInstanceCreate) {
+		return nil, user.ErrNoPermission
+	}
+
+	ownedInstances, err := i.instanceRepo.FindByOwnerID(ctx, req.OwnerID)
+	if err != nil {
+		return nil, err
+	}
+	if !usr.CanAllocateInstance(len(ownedInstances), req.CPU) {
+		return nil, user.ErrQuotaExceeded
+	}
+
 	var instanceID compute.InstanceID
 	uowErr := i.uow.Do(ctx, func(ctx context.Context) error {
 		// インスタンスを置くサブネットを取得する
