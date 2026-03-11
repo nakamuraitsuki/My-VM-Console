@@ -15,7 +15,6 @@ import (
 
 type RequestCreateInstanceInput struct {
 	Name     string
-	OwnerID  user.UserID
 	ImageID  image.ImageID
 	VPCID    network.VPCID
 	SubnetID *network.SubnetID // Optional に対応したい
@@ -79,7 +78,7 @@ func (i *requestCreateInstanceInteractor) Execute(
 		return nil, user.ErrNoPermission
 	}
 
-	ownedInstances, err := i.instanceRepo.FindByOwnerID(ctx, req.OwnerID)
+	ownedInstances, err := i.instanceRepo.FindByOwnerID(ctx, usr.ID())
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +160,7 @@ func (i *requestCreateInstanceInteractor) Execute(
 			req.Name+"-root",
 			defaultSize,
 			"zfs", // 仮のプール名
-			string(req.OwnerID),
+			string(usr.ID()), // とりあえずユーザーの持ち物にしておく
 		)
 		if err := i.storageRepo.Save(ctx, volume); err != nil {
 			return err
@@ -171,7 +170,7 @@ func (i *requestCreateInstanceInteractor) Execute(
 		inst := compute.NewInstance(
 			instanceID,
 			req.Name,
-			req.OwnerID,
+			usr.ID(),
 			compute.StatusPending, // 初期状態はPending
 			nil,
 			req.CPU,
