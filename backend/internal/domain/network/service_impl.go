@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	ErrNoAvailableIPs = errors.New("no available IP addresses in the subnet")
+	ErrNoAvailableCIDRs = errors.New("no available CIDR blocks")
+	ErrNoAvailableIPs   = errors.New("no available IP addresses in the subnet")
 )
 
 type networkService struct {
@@ -17,9 +18,69 @@ type networkService struct {
 
 func NewNetworkService() NetworkService {
 	return &networkService{
-		// 0: ネットワークアドレス, 1: ブロードキャストアドレス
+		// 0: ネットワークアドレス, 1: ゲートウェイ, ブロードキャストアドレスは別途計算するためここでは指定しない
 		reservedOffsets: []int{0, 1},
 	}
+}
+
+func (s *networkService) CalculateNextAvailableVPCCIDR(
+	ctx context.Context,
+	usedCidrs []string,
+) (string, error) {
+	usedMap := make(map[string]struct{})
+	for _, cidr := range usedCidrs {
+		usedMap[cidr] = struct{}{}
+	}
+
+	// 10.x.0.0/16の範囲でCIDRを生成
+	for x := 0; x <= 255; x++ {
+		targetCidr := netip.PrefixFrom(netip.AddrFrom4([4]byte{10, byte(x), 0, 0}), 16).String()
+
+		if _, occupied := usedMap[targetCidr]; !occupied {
+			return targetCidr, nil
+		}
+	}
+	return "", ErrNoAvailableCIDRs
+}
+
+func (s *networkService) CalculateNextAvailableSubnet(
+	ctx context.Context,
+	vpcCidr string,
+	usedCidrs []string,
+) (string, error) {
+	parentPrefix, err := netip.ParsePrefix(vpcCidr)
+	if err != nil {
+		return "", err
+	}
+
+	usedMap := make(map[string]struct{})
+	for _, cidr := range usedCidrs {
+		usedMap[cidr] = struct{}{}
+	}
+
+	addr := parentPrefix.Addr()
+	// vpc /16 から /24 のサブネットを順に走査
+	for {
+		targetSubnet := netip.PrefixFrom(addr, 24)
+
+		if !parentPrefix.Overlaps(targetSubnet) {
+			break
+		}
+
+		if _, occupied := usedMap[targetSubnet.String()]; !occupied {
+			return targetSubnet.String(), nil
+		}
+
+		// 次の /24 へ
+		// ちょっと脳筋すぎるので、いつかビットシフトに変更したい
+		for i := 0; i < 256; i++ {
+			addr = addr.Next()
+		}
+		if !addr.IsValid() {
+			break
+		}
+	}
+	return "", ErrNoAvailableCIDRs
 }
 
 func (s *networkService) CalculateNextAvailableIP(

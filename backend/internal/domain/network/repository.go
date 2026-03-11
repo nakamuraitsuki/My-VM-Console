@@ -10,7 +10,7 @@ type Repository interface {
 	SaveSubnet(ctx context.Context, subnet *Subnet) error
 	DeleteVPC(ctx context.Context, id VPCID) error
 	DeleteSubnet(ctx context.Context, id SubnetID) error
-
+	ListAllUsedCIDRs(ctx context.Context) ([]string, error)
 	FindLeaseByTargetID(ctx context.Context, targetID string) (*Lease, error)
 	FindLeasesBySubnetID(ctx context.Context, subnetID SubnetID) ([]*Lease, error)
 	CreateLease(ctx context.Context, lease *Lease) error
