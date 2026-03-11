@@ -17,3 +17,9 @@ func NewVPC(id VPCID, ownerID, name, cidr string) *VPC {
 		cidr:    cidr,
 	}
 }
+
+// --- Getter ---
+func (v *VPC) ID() VPCID { return v.id }
+func (v *VPC) OwnerID() string { return v.ownerID }
+func (v *VPC) Name() string { return v.name }
+func (v *VPC) CIDR() string { return v.cidr }

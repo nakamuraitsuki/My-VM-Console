@@ -149,11 +149,5 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 		return nil, err
 	}
 
-	newUser.MarkAsInitializing() // ジョブ実行中はinitializing状態にする
-	if err := i.userRepo.Save(ctx, newUser); err != nil {
-		newUser.MarkAsFailed(user.FailedInPending)
-		_ = i.userRepo.Save(ctx, newUser)
-		return nil, err
-	}
 	return newUser, nil
 }

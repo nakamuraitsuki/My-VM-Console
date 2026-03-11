@@ -6,6 +6,7 @@ import "errors"
 var (
 	ErrQuotaExceeded = errors.New("resource quota exceeded")
 	ErrNoPermission  = errors.New("permission denied")
+	ErrInvalidStatus  = errors.New("invalid user status for this operation")
 )
 
 type UserID string
@@ -98,9 +99,25 @@ func (u *User) CanAllocateInstance(currentInstances, requestedCPU int) bool {
 	return true
 }
 
-func (u *User) MarkAsInitializing() {
+// 冪等性の確保のため、pending, failed && errorPhase=initializingのときのみネットワーク作成処理を実行する
+func (u *User) MarkAsInitializing() error {
+	if u.status == UserStatusActive {
+		return ErrInvalidStatus
+	}
+	if u.status == UserStatusFailed && (u.errorPhase == nil || *u.errorPhase != FailedInPending) {
+		return ErrInvalidStatus
+	}
 	u.status = UserStatusInitializing
 	u.errorPhase = nil // エラー理由はクリア
+	return nil
+}
+
+func (u *User) MarkAsActive() error {
+	if u.status != UserStatusInitializing {
+		return ErrInvalidStatus
+	}
+	u.status = UserStatusActive
+	return nil
 }
 
 func (u *User) MarkAsFailed(phase FailedPhase) UserPersistentData {
