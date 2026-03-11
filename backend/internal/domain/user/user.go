@@ -21,6 +21,24 @@ const (
 	PermissionNetworkManage  Permission = "network:manage"
 )
 
+type UserStatus string
+
+// --- User Status ---
+const (
+	UserStatusPending      UserStatus = "pending"
+	UserStatusInitializing UserStatus = "initializing"
+	UserStatusActive       UserStatus = "active"
+	UserStatusFailed       UserStatus = "failed"
+)
+
+type FailedPhase string
+
+// --- Failed Phase ---
+const (
+	FailedInPending      FailedPhase = "failed in pending"
+	FailedInInitializing FailedPhase = "failed in initializing"
+)
+
 type UsageQuota struct {
 	MaxInstance int
 	MaxCPU      int
@@ -32,15 +50,19 @@ type User struct {
 	displayName string
 	permissions []Permission
 	quota       UsageQuota
+	status      UserStatus
+	errorPhase *FailedPhase // エラー理由（エラー状態のときのみ値が入る）
 }
 
 // --- Constructor ---
-func NewUser(id UserID, name string, perms []Permission, quota UsageQuota) *User {
+func NewUser(id UserID, name string, perms []Permission, quota UsageQuota, status UserStatus, errorPhase *FailedPhase) *User {
 	return &User{
 		id:          id,
 		displayName: name,
 		permissions: perms,
 		quota:       quota,
+		status:      status,
+		errorPhase: errorPhase,
 	}
 }
 

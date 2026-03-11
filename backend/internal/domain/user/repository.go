@@ -12,6 +12,8 @@ var (
 type UserPersistentData struct {
 	ID    UserID
 	Quota UsageQuota
+	Status UserStatus
+	ErrorPhase *FailedPhase // エラー理由（エラー状態のときのみ値が入る）
 }
 
 type UserRepository interface {
