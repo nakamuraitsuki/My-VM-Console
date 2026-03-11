@@ -18,6 +18,6 @@ type UserPersistentData struct {
 
 type UserRepository interface {
 	FindByID(ctx context.Context, id UserID) (*UserPersistentData, error)
-	Save(ctx context.Context, user *UserPersistentData) error
+	Save(ctx context.Context, user *User) error
 	Delete(ctx context.Context, id UserID) error
 }

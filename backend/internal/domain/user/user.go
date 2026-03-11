@@ -97,3 +97,19 @@ func (u *User) CanAllocateInstance(currentInstances, requestedCPU int) bool {
 	}
 	return true
 }
+
+func (u *User) MarkAsInitializing() {
+	u.status = UserStatusInitializing
+	u.errorPhase = nil // エラー理由はクリア
+}
+
+func (u *User) MarkAsFailed(phase FailedPhase) UserPersistentData {
+	u.status = UserStatusFailed
+	u.errorPhase = &phase
+	return UserPersistentData{
+		ID: u.id,
+		Quota: u.quota,
+		Status: u.status,
+		ErrorPhase: u.errorPhase,
+	}
+}
