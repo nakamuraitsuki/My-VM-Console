@@ -10,6 +10,7 @@ require (
 	github.com/labstack/echo-contrib v0.50.1
 	github.com/labstack/echo/v4 v4.15.1
 	github.com/mattn/go-sqlite3 v1.14.34
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 )
 
 require (
