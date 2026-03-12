@@ -6,8 +6,10 @@ require (
 	github.com/coreos/go-oidc/v3 v3.17.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/sessions v1.4.0
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/labstack/echo-contrib v0.50.1
 	github.com/labstack/echo/v4 v4.15.1
+	github.com/mattn/go-sqlite3 v1.14.34
 )
 
 require (
