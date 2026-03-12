@@ -71,9 +71,11 @@ func NewUser(id UserID, name string, perms []Permission, quota UsageQuota, statu
 }
 
 // --- Getters ---
-func (u *User) ID() UserID          { return u.id }
-func (u *User) DisplayName() string { return u.displayName }
-func (u *User) Quota() UsageQuota   { return u.quota }
+func (u *User) ID() UserID             { return u.id }
+func (u *User) DisplayName() string    { return u.displayName }
+func (u *User) Quota() UsageQuota      { return u.quota }
+func (u *User) Status() UserStatus     { return u.status }
+func (u *User) ErrPhase() *FailedPhase { return u.errorPhase }
 
 // --- Setters / Domain Logic ---
 func (u *User) UpdateQuota(newQuota UsageQuota) {
