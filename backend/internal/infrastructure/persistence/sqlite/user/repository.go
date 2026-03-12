@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"example.com/m/internal/domain/user"
+	"example.com/m/internal/infrastructure/persistence/sqlite"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -50,6 +51,7 @@ WHERE id = ?
 }
 
 func (r *repository) Save(ctx context.Context, usr *user.User) error {
+	db := sqlite.GetExt(ctx, r.db)
 	// 永続化モデルへの詰め替え
 	model := userModel{
 		ID:          string(usr.ID()),
@@ -74,12 +76,13 @@ ON CONFLICT(id) DO UPDATE SET
 	error_phase = :error_phase
 `
 	// NamedExecContext でモデルをそのまま渡す
-	_, err := r.db.NamedExecContext(ctx, query, model)
+	_, err := sqlx.NamedExecContext(ctx, db, query, model)
 	return err
 }
 
 func (r *repository) Delete(ctx context.Context, id user.UserID) error {
+	db := sqlite.GetExt(ctx, r.db)
 	const query = `DELETE FROM users WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, string(id))
+	_, err := db.ExecContext(ctx, query, string(id))
 	return err
 }

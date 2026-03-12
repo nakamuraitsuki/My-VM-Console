@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"example.com/m/internal/domain/image"
+	"example.com/m/internal/infrastructure/persistence/sqlite"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -25,7 +26,7 @@ func NewRepository(db *sqlx.DB) image.Repository {
 	return &repository{db: db}
 }
 
-func (r *repository	) FindByAlias(ctx context.Context, alias string) (*image.Image, error) {
+func (r *repository) FindByAlias(ctx context.Context, alias string) (*image.Image, error) {
 	const query = `SELECT * FROM images WHERE alias = ?`
 	var m imageModel
 	if err := r.db.GetContext(ctx, &m, query, alias); err != nil {
@@ -52,6 +53,8 @@ func (r *repository) FindAll(ctx context.Context) ([]*image.Image, error) {
 }
 
 func (r *repository) Save(ctx context.Context, img *image.Image) error {
+	db := sqlite.GetExt(ctx, r.db)
+
 	model := imageModel{
 		ID:          string(img.ID()),
 		Alias:       img.Alias(),
@@ -71,7 +74,7 @@ ON CONFLICT(id) DO UPDATE SET
 	protocol = :protocol,
 	is_public = :is_public
 `
-	_, err := r.db.NamedExecContext(ctx, query, model)
+	_, err := sqlx.NamedExecContext(ctx, db, query, model)
 	return err
 }
 

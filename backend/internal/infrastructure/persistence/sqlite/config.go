@@ -1,12 +1,20 @@
 package sqlite
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+type DB interface {
+	sqlx.ExtContext
+	sqlx.PreparerContext
+	GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+	SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+}
 
 func NewSqlxClient(cfg *Config) *sqlx.DB {
 	// 接続

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"example.com/m/internal/domain/network"
+	"example.com/m/internal/infrastructure/persistence/sqlite"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -80,6 +81,8 @@ func (r *repository) FindSubnetByID(ctx context.Context, id network.SubnetID) (*
 }
 
 func (r *repository) SaveVPC(ctx context.Context, vpc *network.VPC) error {
+	db := sqlite.GetExt(ctx, r.db)
+
 	model := vpcModel{
 		ID:      string(vpc.ID()),
 		OwnerID: vpc.OwnerID(),
@@ -96,11 +99,13 @@ ON CONFLICT(id) DO UPDATE SET
 	cidr = :cidr
 `
 
-	_, err := r.db.NamedExecContext(ctx, query, model)
+	_, err := sqlx.NamedExecContext(ctx, db, query, model)
 	return err
 }
 
 func (r *repository) SaveSubnet(ctx context.Context, subnet *network.Subnet) error {
+	db := sqlite.GetExt(ctx, r.db)
+
 	model := subnetModel{
 		ID:    string(subnet.ID()),
 		VPCID: string(subnet.VPCID()),
@@ -117,19 +122,21 @@ ON CONFLICT(id) DO UPDATE SET
 	cidr = :cidr
 `
 
-	_, err := r.db.NamedExecContext(ctx, query, model)
+	_, err := sqlx.NamedExecContext(ctx, db, query, model)
 	return err
 }
 
 func (r *repository) DeleteVPC(ctx context.Context, id network.VPCID) error {
+	db := sqlite.GetExt(ctx, r.db)
 	const query = `DELETE FROM vpcs WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, string(id))
+	_, err := db.ExecContext(ctx, query, string(id))
 	return err
 }
 
 func (r *repository) DeleteSubnet(ctx context.Context, id network.SubnetID) error {
+	db := sqlite.GetExt(ctx, r.db)
 	const query = `DELETE FROM subnets WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, string(id))
+	_, err := db.ExecContext(ctx, query, string(id))
 	return err
 }
 
@@ -178,6 +185,8 @@ func (r *repository) FindLeasesBySubnetID(ctx context.Context, subnetID network.
 }
 
 func (r *repository) CreateLease(ctx context.Context, lease *network.Lease) error {
+	db := sqlite.GetExt(ctx, r.db)
+
 	model := leaseModel{
 		SubnetID:  string(lease.SubnetID),
 		TargetID:  lease.TargetID,
@@ -192,12 +201,13 @@ ON CONFLICT(target_id) DO UPDATE SET
 	ip_address = :ip_address
 `
 
-	_, err := r.db.NamedExecContext(ctx, query, model)
+	_, err := sqlx.NamedExecContext(ctx, db, query, model)
 	return err
 }
 
 func (r *repository) DeleteLease(ctx context.Context, targetID string) error {
+	db := sqlite.GetExt(ctx, r.db)
 	const query = `DELETE FROM leases WHERE target_id = ?`
-	_, err := r.db.ExecContext(ctx, query, targetID)
+	_, err := db.ExecContext(ctx, query, targetID)
 	return err
 }

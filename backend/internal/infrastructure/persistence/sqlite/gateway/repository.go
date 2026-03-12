@@ -6,6 +6,7 @@ import (
 
 	"example.com/m/internal/domain/compute"
 	"example.com/m/internal/domain/gateway"
+	"example.com/m/internal/infrastructure/persistence/sqlite"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -58,6 +59,7 @@ func (r *repository) FindByOwnerID(ctx context.Context, ownerID string) ([]*gate
 }
 
 func (r *repository) Save(ctx context.Context, route *gateway.IngressRoute) error {
+	db := sqlite.GetExt(ctx, r.db)
 	const query = `
 INSERT INTO ingress_routes (id, subdomain, port_name, target_ip, target_port, instance_id, owner_id)
 VALUES (:id, :subdomain, :port_name, :target_ip, :target_port, :instance_id, :owner_id)
@@ -78,11 +80,12 @@ owner_id    = :owner_id
 		InstanceID: string(route.InstanceID()),
 		OwnerID:    route.OwnerID(),
 	}
-	_, err := r.db.NamedExecContext(ctx, query, m)
+	_, err := sqlx.NamedExecContext(ctx, db, query, m)
 	return err
 }
 
 func (r *repository) DeleteBulk(ctx context.Context, ids []gateway.IngressID) error {
+	db := sqlite.GetExt(ctx, r.db)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -94,8 +97,8 @@ func (r *repository) DeleteBulk(ctx context.Context, ids []gateway.IngressID) er
 	if err != nil {
 		return err
 	}
-	query = r.db.Rebind(query)
-	_, err = r.db.ExecContext(ctx, query, args...)
+	query = db.Rebind(query)
+	_, err = db.ExecContext(ctx, query, args...)
 	return err
 }
 

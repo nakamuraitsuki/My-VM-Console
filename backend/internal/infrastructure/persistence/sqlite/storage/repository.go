@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"example.com/m/internal/domain/storage"
+	"example.com/m/internal/infrastructure/persistence/sqlite"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -44,6 +45,8 @@ func (r *repository) FindByID(ctx context.Context, id storage.VolumeID) (*storag
 }
 
 func (r *repository) Save(ctx context.Context, volume *storage.Volume) error {
+	db := sqlite.GetExt(ctx, r.db)
+
 	model := volumeModel{
 		ID:     string(volume.ID()),
 		Name:   volume.Name(),
@@ -62,13 +65,14 @@ ON CONFLICT(id) DO UPDATE SET
 	owner = :owner
 `
 
-	_, err := r.db.NamedExecContext(ctx, query, model)
+	_, err := sqlx.NamedExecContext(ctx, db, query, model)
 	return err
 }
 
 func (r *repository) Delete(ctx context.Context, id storage.VolumeID) error {
+	db := sqlite.GetExt(ctx, r.db)
+
 	const query = `DELETE FROM volumes WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, string(id))
+	_, err := db.ExecContext(ctx, query, string(id))
 	return err
 }
-

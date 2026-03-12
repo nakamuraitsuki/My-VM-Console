@@ -9,6 +9,7 @@ import (
 	"example.com/m/internal/domain/network"
 	"example.com/m/internal/domain/storage"
 	"example.com/m/internal/domain/user"
+	"example.com/m/internal/infrastructure/persistence/sqlite"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -35,6 +36,8 @@ func NewRepository(db *sqlx.DB) compute.InstanceRepository {
 }
 
 func (r *repository) Save(ctx context.Context, inst *compute.Instance) error {
+	db := sqlite.GetExt(ctx, r.db)
+
 	model := instanceModel{
 		ID:           string(inst.ID()),
 		Name:         inst.Name(),
@@ -66,7 +69,7 @@ INSERT INTO instances (
 	private_ip = :private_ip,
 	root_volume_id = :root_volume_id
 `
-	_, err := r.db.NamedExecContext(ctx, query, model)
+	_, err := sqlx.NamedExecContext(ctx, db, query, model)
 	return err
 }
 
@@ -97,8 +100,9 @@ func (r *repository) FindByOwnerID(ctx context.Context, ownerID user.UserID) ([]
 }
 
 func (r *repository) Delete(ctx context.Context, id compute.InstanceID) error {
+	db := sqlite.GetExt(ctx, r.db)
 	const query = `DELETE FROM instances WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, string(id))
+	_, err := db.ExecContext(ctx, query, string(id))
 	return err
 }
 
