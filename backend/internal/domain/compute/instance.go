@@ -99,6 +99,9 @@ func (i *Instance) ImageID() image.ImageID         { return i.imageID }
 func (i *Instance) SubnetID() network.SubnetID     { return i.subenetID }
 func (i *Instance) PrivateIP() string              { return i.privateIP }
 func (i *Instance) RootVolumeID() storage.VolumeID { return i.rootVolumeID }
+func (i *Instance) CPU() int                       { return i.cpu }
+func (i *Instance) MemoryMB() int                  { return i.memoryMB }
+func (i *Instance) ErrPhase() *ErrPhase            { return i.errorPhase }
 
 // --- Setters ---
 
