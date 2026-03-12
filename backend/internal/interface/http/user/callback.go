@@ -65,6 +65,7 @@ func (h *Handler) Callback(c echo.Context) error {
 	// JIT Provisioning
 	ensureUserInput := user.EnsureUserInput{
 		Sub: claims.Subject,
+		Token: tokenResponse.AccessToken,
 	}
 	resultUser, err := h.ensureUserUseCase.Execute(ctx, ensureUserInput)
 	if err != nil {

@@ -19,7 +19,7 @@ func AuthMiddleware(
 
 			// セッションから ID と AccessToken を取り出す
 			userID, okID := sess.Values["user_id"].(string)
-			_, okTok := sess.Values["access_token"].(string) // 使わないが、あることがわかればいい
+			token, okTok := sess.Values["access_token"].(string)
 
 			// どちらか欠けていれば未認証として扱う
 			if !okID || !okTok || userID == "" {
@@ -30,6 +30,7 @@ func AuthMiddleware(
 			// UseCaseを呼び出してユーザー情報を同期
 			resultUser, err := ensureUser.Execute(ctx, user.EnsureUserInput{
 				Sub: userID,
+				Token: token,
 			})
 			if err != nil {
 				// ここでエラーが出る場合は、トークン失効やDBエラーなどが考えられる

@@ -20,6 +20,7 @@ const (
 
 type EnsureUserInput struct {
 	Sub string
+	Token string
 }
 
 type EnsureUserUseCase interface {
@@ -61,7 +62,7 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 	}
 	if userData != nil {
 		// if exist, return user information
-		identity, err := i.identitySvc.GetIdentity(ctx, input.Sub)
+		identity, err := i.identitySvc.GetIdentity(ctx, input.Token)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +94,7 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 			Status: user.UserStatusPending, // At first, set status to pending
 			// FailedPhase is nil at first.
 		}
-		identity, err := i.identitySvc.GetIdentity(ctx, input.Sub)
+		identity, err := i.identitySvc.GetIdentity(ctx, input.Token)
 		if err != nil {
 			return err
 		}

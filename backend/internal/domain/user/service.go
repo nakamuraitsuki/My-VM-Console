@@ -9,5 +9,5 @@ type UserIdentity struct {
 }
 
 type IdentityService interface {
-	GetIdentity(ctx context.Context, sub string) (*UserIdentity, error)
+	GetIdentity(ctx context.Context, token string) (*UserIdentity, error)
 }
