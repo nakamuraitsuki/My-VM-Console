@@ -6,7 +6,7 @@ import "errors"
 var (
 	ErrQuotaExceeded = errors.New("resource quota exceeded")
 	ErrNoPermission  = errors.New("permission denied")
-	ErrInvalidStatus  = errors.New("invalid user status for this operation")
+	ErrInvalidStatus = errors.New("invalid user status for this operation")
 )
 
 type UserID string
@@ -14,12 +14,14 @@ type Permission string
 
 // --- Permissions ---
 const (
-	PermissionAll            Permission = "*"
-	PermissionInstanceRead   Permission = "instance:read"
-	PermissionInstanceCreate Permission = "instance:create"
-	PermissionInstanceUpdate Permission = "instance:update"
-	PermissionInstanceDelete Permission = "instance:delete"
-	PermissionNetworkManage  Permission = "network:manage"
+	PermissionAll             Permission = "*"
+	PermissionInstanceRead    Permission = "instance:read"
+	PermissionInstanceCreate  Permission = "instance:create"
+	PermissionInstanceStop    Permission = "instance:stop"
+	PermissionInstanceStopAll Permission = "instance:stop:all"
+	PermissionInstanceUpdate  Permission = "instance:update"
+	PermissionInstanceDelete  Permission = "instance:delete"
+	PermissionNetworkManage   Permission = "network:manage"
 )
 
 type UserStatus string
@@ -52,7 +54,7 @@ type User struct {
 	permissions []Permission
 	quota       UsageQuota
 	status      UserStatus
-	errorPhase *FailedPhase // エラー理由（エラー状態のときのみ値が入る）
+	errorPhase  *FailedPhase // エラー理由（エラー状態のときのみ値が入る）
 }
 
 // --- Constructor ---
@@ -63,7 +65,7 @@ func NewUser(id UserID, name string, perms []Permission, quota UsageQuota, statu
 		permissions: perms,
 		quota:       quota,
 		status:      status,
-		errorPhase: errorPhase,
+		errorPhase:  errorPhase,
 	}
 }
 
@@ -124,9 +126,9 @@ func (u *User) MarkAsFailed(phase FailedPhase) UserPersistentData {
 	u.status = UserStatusFailed
 	u.errorPhase = &phase
 	return UserPersistentData{
-		ID: u.id,
-		Quota: u.quota,
-		Status: u.status,
+		ID:         u.id,
+		Quota:      u.quota,
+		Status:     u.status,
 		ErrorPhase: u.errorPhase,
 	}
 }

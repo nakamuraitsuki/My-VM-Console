@@ -125,6 +125,14 @@ func (i *Instance) MarkAsRunning() error {
 	return ErrInvalidInstanceStatus
 }
 
+func (i *Instance) MarkAsStopping() error {
+	if i.status == StatusRunning {
+		i.status = StatusStopping
+		return nil
+	}
+	return ErrInvalidInstanceStatus
+}
+
 // エラー状態に遷移させる
 func (i *Instance) MarkAsError(errorPhase ErrPhase) {
 	i.status = StatusError

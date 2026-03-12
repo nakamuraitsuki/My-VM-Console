@@ -5,7 +5,8 @@ import "context"
 type JobType string
 
 const (
-	JobTypeCreateInstance JobType = "instance.create"
+	JobTypeCreateInstance            JobType = "instance.create"
+	JobTypeStopInstance              JobType = "instance.stop"
 	JobTypeCreateVPCAndDefaultSubnet JobType = "vpc.create_with_default_subnet"
 )
 
