@@ -17,15 +17,15 @@ type imageModel struct {
 	IsPublic    bool   `db:"is_public"`
 }
 
-type imageRepository struct {
+type repository struct {
 	db *sqlx.DB
 }
 
-func NewImageRepository(db *sqlx.DB) image.Repository {
-	return &imageRepository{db: db}
+func NewRepository(db *sqlx.DB) image.Repository {
+	return &repository{db: db}
 }
 
-func (r *imageRepository) FindByAlias(ctx context.Context, alias string) (*image.Image, error) {
+func (r *repository	) FindByAlias(ctx context.Context, alias string) (*image.Image, error) {
 	const query = `SELECT * FROM images WHERE alias = ?`
 	var m imageModel
 	if err := r.db.GetContext(ctx, &m, query, alias); err != nil {
@@ -37,7 +37,7 @@ func (r *imageRepository) FindByAlias(ctx context.Context, alias string) (*image
 	return r.toEntity(&m), nil
 }
 
-func (r *imageRepository) FindAll(ctx context.Context) ([]*image.Image, error) {
+func (r *repository) FindAll(ctx context.Context) ([]*image.Image, error) {
 	const query = `SELECT * FROM images`
 	var models []imageModel
 	if err := r.db.SelectContext(ctx, &models, query); err != nil {
@@ -51,14 +51,14 @@ func (r *imageRepository) FindAll(ctx context.Context) ([]*image.Image, error) {
 	return results, nil
 }
 
-func (r *imageRepository) Save(ctx context.Context, img *image.Image) error {
+func (r *repository) Save(ctx context.Context, img *image.Image) error {
 	model := imageModel{
-		ID:        string(img.ID()),
-		Alias:     img.Alias(),
+		ID:          string(img.ID()),
+		Alias:       img.Alias(),
 		Fingerprint: img.Fingerprint(),
-		ServerURL: img.ServerURL(),
-		Protocol:  img.Protocol(),
-		IsPublic:  img.IsPublic(),
+		ServerURL:   img.ServerURL(),
+		Protocol:    img.Protocol(),
+		IsPublic:    img.IsPublic(),
 	}
 
 	const query = `
@@ -75,7 +75,7 @@ ON CONFLICT(id) DO UPDATE SET
 	return err
 }
 
-func (r *imageRepository) toEntity(m *imageModel) *image.Image {
+func (r *repository) toEntity(m *imageModel) *image.Image {
 	return image.NewImage(
 		image.ImageID(m.ID),
 		m.Alias,
