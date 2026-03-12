@@ -1,7 +1,7 @@
 package user
 
 import (
-	"example.com/m/internal/infrastructure/oidc"
+	"example.com/m/internal/infrastructure/auth/oidc"
 	"example.com/m/internal/usecase/user"
 )
 
