@@ -28,15 +28,15 @@ type leaseModel struct {
 	IPAddress string `db:"ip_address"`
 }
 
-type NetworkRepositoryImpl struct {
+type repository struct {
 	db *sqlx.DB
 }
 
 func NewRepository(db *sqlx.DB) network.Repository {
-	return &NetworkRepositoryImpl{db: db}
+	return &repository{db: db}
 }
 
-func (r *NetworkRepositoryImpl) FindVPCByID(ctx context.Context, id network.VPCID) (*network.VPC, error) {
+func (r *repository) FindVPCByID(ctx context.Context, id network.VPCID) (*network.VPC, error) {
 	const query = `SELECT id, owner_id, name, cidr FROM vpcs WHERE id = ?`
 	var m vpcModel
 	if err := r.db.GetContext(ctx, &m, query, string(id)); err != nil {
@@ -48,7 +48,7 @@ func (r *NetworkRepositoryImpl) FindVPCByID(ctx context.Context, id network.VPCI
 	return network.NewVPC(network.VPCID(m.ID), m.OwnerID, m.Name, m.CIDR), nil
 }
 
-func (r *NetworkRepositoryImpl) FindSubnetsByVPCID(ctx context.Context, vpcID network.VPCID) ([]*network.Subnet, error) {
+func (r *repository) FindSubnetsByVPCID(ctx context.Context, vpcID network.VPCID) ([]*network.Subnet, error) {
 	const query = `SELECT id, vpc_id, name, cidr FROM subnets WHERE vpc_id = ?`
 	var models []subnetModel
 	if err := r.db.SelectContext(ctx, &models, query, string(vpcID)); err != nil {
@@ -67,7 +67,7 @@ func (r *NetworkRepositoryImpl) FindSubnetsByVPCID(ctx context.Context, vpcID ne
 	return result, nil
 }
 
-func (r *NetworkRepositoryImpl) FindSubnetByID(ctx context.Context, id network.SubnetID) (*network.Subnet, error) {
+func (r *repository) FindSubnetByID(ctx context.Context, id network.SubnetID) (*network.Subnet, error) {
 	const query = `SELECT id, vpc_id, name, cidr FROM subnets WHERE id = ?`
 	var m subnetModel
 	if err := r.db.GetContext(ctx, &m, query, string(id)); err != nil {
@@ -79,7 +79,7 @@ func (r *NetworkRepositoryImpl) FindSubnetByID(ctx context.Context, id network.S
 	return network.NewSubnet(network.SubnetID(m.ID), network.VPCID(m.VPCID), m.Name, m.CIDR), nil
 }
 
-func (r *NetworkRepositoryImpl) SaveVPC(ctx context.Context, vpc *network.VPC) error {
+func (r *repository) SaveVPC(ctx context.Context, vpc *network.VPC) error {
 	model := vpcModel{
 		ID:      string(vpc.ID()),
 		OwnerID: vpc.OwnerID(),
@@ -100,7 +100,7 @@ ON CONFLICT(id) DO UPDATE SET
 	return err
 }
 
-func (r *NetworkRepositoryImpl) SaveSubnet(ctx context.Context, subnet *network.Subnet) error {
+func (r *repository) SaveSubnet(ctx context.Context, subnet *network.Subnet) error {
 	model := subnetModel{
 		ID:    string(subnet.ID()),
 		VPCID: string(subnet.VPCID()),
@@ -121,19 +121,19 @@ ON CONFLICT(id) DO UPDATE SET
 	return err
 }
 
-func (r *NetworkRepositoryImpl) DeleteVPC(ctx context.Context, id network.VPCID) error {
+func (r *repository) DeleteVPC(ctx context.Context, id network.VPCID) error {
 	const query = `DELETE FROM vpcs WHERE id = ?`
 	_, err := r.db.ExecContext(ctx, query, string(id))
 	return err
 }
 
-func (r *NetworkRepositoryImpl) DeleteSubnet(ctx context.Context, id network.SubnetID) error {
+func (r *repository) DeleteSubnet(ctx context.Context, id network.SubnetID) error {
 	const query = `DELETE FROM subnets WHERE id = ?`
 	_, err := r.db.ExecContext(ctx, query, string(id))
 	return err
 }
 
-func (r *NetworkRepositoryImpl) ListAllUsedCIDRs(ctx context.Context) ([]string, error) {
+func (r *repository) ListAllUsedCIDRs(ctx context.Context) ([]string, error) {
 	const query = `SELECT cidr FROM vpcs`
 	var cidrs []string
 	if err := r.db.SelectContext(ctx, &cidrs, query); err != nil {
@@ -142,7 +142,7 @@ func (r *NetworkRepositoryImpl) ListAllUsedCIDRs(ctx context.Context) ([]string,
 	return cidrs, nil
 }
 
-func (r *NetworkRepositoryImpl) FindLeaseByTargetID(ctx context.Context, targetID string) (*network.Lease, error) {
+func (r *repository) FindLeaseByTargetID(ctx context.Context, targetID string) (*network.Lease, error) {
 	const query = `SELECT subnet_id, target_id, ip_address FROM leases WHERE target_id = ?`
 	var m leaseModel
 	if err := r.db.GetContext(ctx, &m, query, targetID); err != nil {
@@ -159,7 +159,7 @@ func (r *NetworkRepositoryImpl) FindLeaseByTargetID(ctx context.Context, targetI
 	), nil
 }
 
-func (r *NetworkRepositoryImpl) FindLeasesBySubnetID(ctx context.Context, subnetID network.SubnetID) ([]*network.Lease, error) {
+func (r *repository) FindLeasesBySubnetID(ctx context.Context, subnetID network.SubnetID) ([]*network.Lease, error) {
 	const query = `SELECT subnet_id, target_id, ip_address FROM leases WHERE subnet_id = ?`
 	var models []leaseModel
 	if err := r.db.SelectContext(ctx, &models, query, string(subnetID)); err != nil {
@@ -177,7 +177,7 @@ func (r *NetworkRepositoryImpl) FindLeasesBySubnetID(ctx context.Context, subnet
 	return result, nil
 }
 
-func (r *NetworkRepositoryImpl) CreateLease(ctx context.Context, lease *network.Lease) error {
+func (r *repository) CreateLease(ctx context.Context, lease *network.Lease) error {
 	model := leaseModel{
 		SubnetID:  string(lease.SubnetID),
 		TargetID:  lease.TargetID,
@@ -196,7 +196,7 @@ ON CONFLICT(target_id) DO UPDATE SET
 	return err
 }
 
-func (r *NetworkRepositoryImpl) DeleteLease(ctx context.Context, targetID string) error {
+func (r *repository) DeleteLease(ctx context.Context, targetID string) error {
 	const query = `DELETE FROM leases WHERE target_id = ?`
 	_, err := r.db.ExecContext(ctx, query, targetID)
 	return err
