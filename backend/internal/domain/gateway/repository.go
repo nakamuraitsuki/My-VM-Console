@@ -11,5 +11,5 @@ type Repository interface {
 	FindByInstanceID(ctx context.Context, instanceID compute.InstanceID) ([]*IngressRoute, error)
 	FindByOwnerID(ctx context.Context, ownerID string) ([]*IngressRoute, error)
 	Save(ctx context.Context, route *IngressRoute) error
-	Delete(ctx context.Context, id IngressID) error
+	DeleteBulk(ctx context.Context, ids []IngressID) error
 }

@@ -14,14 +14,15 @@ type Permission string
 
 // --- Permissions ---
 const (
-	PermissionAll             Permission = "*"
-	PermissionInstanceRead    Permission = "instance:read"
-	PermissionInstanceCreate  Permission = "instance:create"
-	PermissionInstanceStop    Permission = "instance:stop"
-	PermissionInstanceStopAll Permission = "instance:stop:all"
-	PermissionInstanceUpdate  Permission = "instance:update"
-	PermissionInstanceDelete  Permission = "instance:delete"
-	PermissionNetworkManage   Permission = "network:manage"
+	PermissionAll               Permission = "*"
+	PermissionInstanceRead      Permission = "instance:read"
+	PermissionInstanceCreate    Permission = "instance:create"
+	PermissionInstanceStop      Permission = "instance:stop"
+	PermissionInstanceStopAll   Permission = "instance:stop:all"
+	PermissionInstanceUpdate    Permission = "instance:update"
+	PermissionInstanceDelete    Permission = "instance:delete"
+	PermissionInstanceDeleteAll Permission = "instance:delete:all"
+	PermissionNetworkManage     Permission = "network:manage"
 )
 
 type UserStatus string

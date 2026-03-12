@@ -164,6 +164,14 @@ func (i *Instance) MarkAsStopped() error {
 	return ErrInvalidInstanceStatus
 }
 
+func (i *Instance) MarkAsDeleting() error {
+	if i.status == StatusStopped || i.status == StatusError {
+		i.status = StatusDeleting
+		return nil
+	}
+	return ErrInvalidInstanceStatus
+}
+
 // エラー状態に遷移させる
 func (i *Instance) MarkAsError(errorPhase ErrPhase) {
 	i.status = StatusError
