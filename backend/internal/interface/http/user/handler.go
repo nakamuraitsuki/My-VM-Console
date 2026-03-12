@@ -6,19 +6,22 @@ import (
 )
 
 type Handler struct {
-	oidcConfig        *oidc.OIDCConfig
-	idTokenVerifier   oidc.IDTokenVerifier
-	ensureUserUseCase user.EnsureUserUseCase
+	oidcConfig            *oidc.OIDCConfig
+	idTokenVerifier       oidc.IDTokenVerifier
+	ensureUserUseCase     user.EnsureUserUseCase
+	listMyInstanceUseCase user.ListMyInstanceUseCase
 }
 
 func NewHandler(
 	oidcConfig *oidc.OIDCConfig,
 	idTokenVerifier oidc.IDTokenVerifier,
 	ensureUserUseCase user.EnsureUserUseCase,
+	listMyInstanceUseCase user.ListMyInstanceUseCase,
 ) *Handler {
 	return &Handler{
-		oidcConfig:        oidcConfig,
-		idTokenVerifier:   idTokenVerifier,
-		ensureUserUseCase: ensureUserUseCase,
+		oidcConfig:            oidcConfig,
+		idTokenVerifier:       idTokenVerifier,
+		ensureUserUseCase:     ensureUserUseCase,
+		listMyInstanceUseCase: listMyInstanceUseCase,
 	}
 }
