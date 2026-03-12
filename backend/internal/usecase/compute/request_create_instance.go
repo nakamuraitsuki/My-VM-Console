@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"example.com/m/internal/domain/compute"
+	"example.com/m/internal/domain/gateway"
 	"example.com/m/internal/domain/image"
 	"example.com/m/internal/domain/network"
 	"example.com/m/internal/domain/storage"
@@ -38,6 +39,7 @@ type requestCreateInstanceInteractor struct {
 	userRepo       user.UserRepository
 	instanceRepo   compute.InstanceRepository
 	networkRepo    network.Repository
+	gatewayRepo 	gateway.Repository
 	storageRepo    storage.Repository
 	networkService network.NetworkService
 	publisher      usecase.JobPublisher
@@ -48,6 +50,7 @@ func NewRequestCreateInstanceInteractor(
 	userRepo user.UserRepository,
 	instanceRepo compute.InstanceRepository,
 	networkRepo network.Repository,
+	gatewayRepo gateway.Repository,
 	storageRepo storage.Repository,
 	networkService network.NetworkService,
 	publisher usecase.JobPublisher,
@@ -57,6 +60,7 @@ func NewRequestCreateInstanceInteractor(
 		userRepo:       userRepo,
 		instanceRepo:   instanceRepo,
 		networkRepo:    networkRepo,
+		gatewayRepo: 	gatewayRepo,
 		storageRepo:    storageRepo,
 		networkService: networkService,
 		publisher:      publisher,
@@ -159,7 +163,7 @@ func (i *requestCreateInstanceInteractor) Execute(
 			volumeID,
 			req.Name+"-root",
 			defaultSize,
-			"zfs", // 仮のプール名
+			"zfs",            // 仮のプール名
 			string(usr.ID()), // とりあえずユーザーの持ち物にしておく
 		)
 		if err := i.storageRepo.Save(ctx, volume); err != nil {
@@ -185,17 +189,44 @@ func (i *requestCreateInstanceInteractor) Execute(
 			return err
 		}
 
-		// ジョブの発行
-		payload := CreateInstancePayload{
-			InstanceID: instanceID,
-		}
-		if err := i.publisher.Publish(ctx, usecase.JobTypeCreateInstance, payload); err != nil {
+		// インスタンスを外部に公開する
+		ingressID := gateway.IngressID("ingress-" + uuid.New().String())
+		subdomain := req.Name
+		// 初期に与えるのはSSH用ルートのみ。必要になったらユーザー自身が追加する。
+		ingressRoute := gateway.NewIngressRoute(
+			ingressID,
+			subdomain,
+			"ssh",
+			IPAddress,
+			22, // 仮のポート番号
+			string(usr.ID()),
+			instanceID,
+		)
+		if err := i.gatewayRepo.Save(ctx, ingressRoute); err != nil {
 			return err
 		}
+
 		return nil
 	})
 	if uowErr != nil {
 		return nil, uowErr
+	}
+
+	// ジョブの発行
+	payload := CreateInstancePayload{
+		InstanceID: instanceID,
+	}
+	if err := i.publisher.Publish(ctx, usecase.JobTypeCreateInstance, payload); err != nil {
+		inst, err := i.instanceRepo.FindByID(ctx, instanceID)
+		if err != nil {
+			return nil, err
+		}
+		inst.MarkAsError(compute.ErrInPending)
+		if saveErr := i.instanceRepo.Save(ctx, inst); saveErr != nil {
+			return nil, saveErr
+		}
+		_ = i.instanceRepo.Save(ctx, inst) // エラー状態を保存
+		return nil, err
 	}
 
 	createdInstance, err := i.instanceRepo.FindByID(ctx, instanceID)

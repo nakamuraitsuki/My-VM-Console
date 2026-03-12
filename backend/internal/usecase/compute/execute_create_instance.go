@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"example.com/m/internal/domain/compute"
+	"example.com/m/internal/domain/gateway"
 	"example.com/m/internal/domain/storage"
 	"example.com/m/internal/usecase"
 )
@@ -19,23 +20,31 @@ type ExecuteCreateInstanceUseCase interface {
 
 type executeCreateInstanceInteractor struct {
 	instanceRepo   compute.InstanceRepository
+	ingressRepo    gateway.Repository
 	storageRepo    storage.Repository
 	instanceDriver compute.ComputeDriver
 	storageDriver  storage.StorageDriver
+	gatewayDriver  gateway.IngressDriver
 	uow            usecase.UnitOfWork
 }
 
 func NewExecuteCreateInstanceInteractor(
 	instanceRepo compute.InstanceRepository,
 	storageRepo storage.Repository,
+	ingressRepo gateway.Repository,
 	instanceDriver compute.ComputeDriver,
 	storageDriver storage.StorageDriver,
+	gatewayDriver gateway.IngressDriver,
+	uow usecase.UnitOfWork,
 ) ExecuteCreateInstanceUseCase {
 	return &executeCreateInstanceInteractor{
 		instanceRepo:   instanceRepo,
 		storageRepo:    storageRepo,
+		ingressRepo:    ingressRepo,
 		instanceDriver: instanceDriver,
 		storageDriver:  storageDriver,
+		gatewayDriver:  gatewayDriver,
+		uow:            uow,
 	}
 }
 
@@ -107,6 +116,17 @@ func (i *executeCreateInstanceInteractor) Execute(ctx context.Context, payload C
 
 	err = i.instanceDriver.Start(ctx, inst.ID())
 	if err != nil {
+		return err
+	}
+
+	ingresses, err := i.ingressRepo.FindByInstanceID(ctx, inst.ID())
+	if err != nil {
+		return err
+	}
+
+	if err := i.gatewayDriver.ApplyRoutes(ctx, ingresses); err != nil {
+		inst.MarkAsError(compute.ErrInStarting)
+		_ = i.instanceRepo.Save(ctx, inst) // エラー状態を保存
 		return err
 	}
 
