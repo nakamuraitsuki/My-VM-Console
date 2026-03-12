@@ -12,9 +12,7 @@ type RequestStopInstanceInput struct {
 	InstanceID compute.InstanceID
 }
 
-type StopInstancePayload struct {
-	InstanceID compute.InstanceID
-}
+
 
 type RequestStopInstanceUseCase interface {
 	Execute(ctx context.Context, input RequestStopInstanceInput) error

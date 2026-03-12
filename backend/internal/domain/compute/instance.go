@@ -36,6 +36,8 @@ const (
 	ErrInPending  ErrPhase = "error in pending"
 	ErrInCreating ErrPhase = "error in creating"
 	ErrInStarting ErrPhase = "error in starting"
+	ErrInStopping ErrPhase = "error in stopping"
+	ErrInDeleting ErrPhase = "error in deleting"
 )
 
 type Instance struct {
@@ -102,16 +104,26 @@ func (i *Instance) RootVolumeID() storage.VolumeID { return i.rootVolumeID }
 
 // 状態確認ののち、「作成中」状態に遷移させる
 func (i *Instance) MarkAsCreating() error {
-	if i.status == StatusPending || i.status == StatusError {
+	if i.status == StatusPending {
 		i.status = StatusCreating
+		return nil
+	}
+	if i.status == StatusError && i.errorPhase != nil && *i.errorPhase == ErrInPending {
+		i.status = StatusCreating
+		i.errorPhase = nil
 		return nil
 	}
 	return ErrInvalidInstanceStatus
 }
 
 func (i *Instance) MarkAsStarting() error {
-	if i.status == StatusCreating || i.status == StatusStopped || i.status == StatusError {
+	if i.status == StatusCreating || i.status == StatusStopped {
 		i.status = StatusStarting
+		return nil
+	}
+	if i.status == StatusError && i.errorPhase != nil && (*i.errorPhase == ErrInCreating || *i.errorPhase == ErrInStarting) {
+		i.status = StatusStarting
+		i.errorPhase = nil
 		return nil
 	}
 	return ErrInvalidInstanceStatus
@@ -122,12 +134,31 @@ func (i *Instance) MarkAsRunning() error {
 		i.status = StatusRunning
 		return nil
 	}
+	if i.status == StatusError && i.errorPhase != nil && *i.errorPhase == ErrInStarting {
+		i.status = StatusRunning
+		i.errorPhase = nil
+		return nil
+	}
 	return ErrInvalidInstanceStatus
 }
 
 func (i *Instance) MarkAsStopping() error {
-	if i.status == StatusRunning {
+	// 以上終了を許可するためのStatusError許可
+	if i.status == StatusRunning || i.status == StatusError {
 		i.status = StatusStopping
+		return nil
+	}
+	return ErrInvalidInstanceStatus
+}
+
+func (i *Instance) MarkAsStopped() error {
+	if i.status == StatusStopping {
+		i.status = StatusStopped
+		return nil
+	}
+	if i.status == StatusError && i.errorPhase != nil && *i.errorPhase == ErrInStopping {
+		i.status = StatusStopped
+		i.errorPhase = nil
 		return nil
 	}
 	return ErrInvalidInstanceStatus
