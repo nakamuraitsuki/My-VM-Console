@@ -3,7 +3,7 @@ package channel
 import "sync"
 
 type Hub struct {
-	mu     *sync.RWMutex
+	mu     sync.RWMutex
 	channels map[string][]chan []byte
 }
 

@@ -1,0 +1,61 @@
+---
+- name: Install build essential tools
+  ansible.builtin.apt:
+    name: [rsync, curl, tar, make, gcc]
+    state: present
+
+- name: Check if Go is already installed
+  ansible.builtin.stat:
+    path: "/usr/local/go/bin/go"
+  register: go_stat
+
+- name: Download and install Go binary
+  block:
+    - name: Download Go tarball
+      ansible.builtin.get_url:
+        url: "{{ go_download_url }}"
+        dest: "/tmp/{{ go_tarball }}"
+        mode: '0644'
+
+    - name: Remove old Go installation
+      ansible.builtin.file:
+        path: "/usr/local/go"
+        state: absent
+
+    - name: Extract Go tarball
+      ansible.builtin.unarchive:
+        src: "/tmp/{{ go_tarball }}"
+        dest: "/usr/local"
+        remote_src: yes
+
+  when: not go_stat.stat.exists
+
+- name: Add Go to system PATH
+  ansible.builtin.copy:
+    dest: /etc/profile.d/golang.sh
+    content: |
+      export PATH=$PATH:/usr/local/go/bin
+    mode: '0644'
+
+- name: Create application directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+  loop:
+    - "{{ app_root }}"
+    - "/var/log/mycloud"
+  
+- name: Create app config directory
+  ansible.builtin.file:
+    path: "/etc/mycloud"
+    state: directory
+    mode: '0755'
+
+- name: Copy identity mapping JSON
+  ansible.builtin.copy:
+    src: "external_auth_perm.json"
+    dest: "{{ external_auth_perm_file }}"
+    mode: '0644'

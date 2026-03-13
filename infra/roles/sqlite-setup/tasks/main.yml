@@ -1,0 +1,6 @@
+---
+- name: Install SQLite3 package
+  import_tasks: install.yml
+
+- name: Initialize SQLite3 database
+  import_tasks: initialize.yml

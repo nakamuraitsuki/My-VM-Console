@@ -1,0 +1,21 @@
+---
+- name: Synchronize source code
+  ansible.posix.synchronize:
+    src: "{{ src_backend_path }}"
+    dest: "{{ app_root }}"
+    delete: yes
+    recursive: yes
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=bin"
+
+- name: Download Go dependencies
+  ansible.builtin.shell:
+    cmd: "/usr/local/go/bin/go mod download"
+    chdir: "{{ app_root }}"
+
+- name: Build backend binary
+  ansible.builtin.shell:
+    cmd: "/usr/local/go/bin/go build -o {{ app_bin_path }} cmd/main.go"
+    chdir: "{{ app_root }}"
+  register: build_result

@@ -3,7 +3,6 @@ package gateway
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -12,8 +11,6 @@ import (
 	"example.com/m/internal/infrastructure/env"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
-
-var errNotImplemented = errors.New("ingress driver not implemented")
 
 type driver struct {
 	client     *clientv3.Client
@@ -38,7 +35,7 @@ func (d *driver) ApplyRoutes(ctx context.Context, routes []*gateway.IngressRoute
 		record := map[string]any{
 			"host": route.TargetIP(),
 			"port": route.TargetPort(),
-			"ttl": 10, // TTLはとりあえず固定値
+			"ttl":  10, // TTLはとりあえず固定値
 		}
 
 		val, err := json.Marshal(record)

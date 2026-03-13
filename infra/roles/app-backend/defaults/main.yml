@@ -1,0 +1,13 @@
+---
+go_version: "1.25.0"
+go_tarball: "go{{ go_version }}.linux-amd64.tar.gz"
+go_download_url: "https://go.dev/dl/{{ go_tarball }}"
+# アプリケーション関連
+src_backend_path: "../backend/"
+app_root: "/home/{{ ansible_user }}/backend"
+app_bin_path: "/usr/local/bin/mycloud-backend"
+# 環境変数関連
+db_file_path: "/var/lib/mycloud/metadata.db"
+etcd_url: "http://localhost:2379"
+incus_socket: "/var/lib/incus/unix.socket"
+external_auth_perm_file: "/etc/mycloud/external_auth_perm"

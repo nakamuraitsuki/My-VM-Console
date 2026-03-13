@@ -1,0 +1,14 @@
+---
+- name: Download CoreDNS binary
+  ansible.builtin.unarchive:
+    src: "{{ coredns_download_url }}"
+    dest: /tmp
+    remote_src: yes
+    creates: /tmp/coredns
+
+- name: Copy CoreDNS binary to install directory
+  ansible.builtin.copy:
+    src: /tmp/coredns
+    dest: "{{ coredns_bin_dir }}/coredns"
+    mode: '0755'
+    remote_src: yes

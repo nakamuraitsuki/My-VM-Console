@@ -1,0 +1,6 @@
+---
+- name: Install etcd
+  import_tasks: install.yml
+  
+- name: Configure etcd
+  import_tasks: configure.yml

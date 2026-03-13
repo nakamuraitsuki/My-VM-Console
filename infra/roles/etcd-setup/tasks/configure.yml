@@ -1,0 +1,15 @@
+---
+# systemd 登録を行う
+- name: Create systemd service file for etcd
+  ansible.builtin.template:
+    src: "etcd.service.j2"
+    dest: "/etc/systemd/system/etcd.service"
+    mode: '0644'
+  notify: restart etcd
+
+- name: Start and enable etcd
+  ansible.builtin.systemd:
+    name: etcd
+    state: started
+    enabled: yes
+    daemon_reload: yes

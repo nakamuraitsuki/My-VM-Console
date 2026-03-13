@@ -1,0 +1,34 @@
+[Unit]
+Description=MyCloud Control Plane Backend
+Documentation=https://github.com/your-repo/backend
+# 依存するサービスが起動してから実行するように設定
+After=network.target etcd.service coredns.service incus.service
+Wants=etcd.service coredns.service
+
+[Service]
+User=root
+Group=root
+
+Type=simple
+WorkingDirectory={{ app_root }}
+# ビルドしたバイナリを指定
+ExecStart={{ app_bin_path }}
+
+# アプリケーションが参照する環境変数を注入
+EXTERNAL_AUTH_PERMISSING_FILE={{ external_auth_perm_file }}
+Environment="DB_PATH={{ db_path }}"
+Environment="ETCD_ENDPOINT={{ etcd_url }}"
+Environment="INCUS_SOCKET_PATH=/var/lib/incus/unix.socket"
+Environment="LOG_LEVEL=debug"
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin"
+
+# 異常終了時に自動で再起動
+Restart=always
+RestartSec=5
+
+# 標準出力とエラー出力をシステムログ（journald）に送る
+StandardOutput=append:/var/log/mycloud/backend.log
+StandardError=append:/var/log/mycloud/backend.log
+
+[Install]
+WantedBy=multi-user.target

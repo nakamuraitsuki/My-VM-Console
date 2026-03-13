@@ -1,0 +1,11 @@
+---
+- name: Check if database exists
+  ansible.builtin.stat:
+    path: "{{ db_path }}"
+  register: db_stat
+
+- name: Initialize database schema
+  ansible.builtin.shell:
+    cmd: "sqlite3 {{ db_path }}"
+    stdin: "{{ lookup('file', 'init.sql') }}"
+  when: not db_stat.stat.exists

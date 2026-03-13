@@ -10,3 +10,7 @@
   become: yes
   roles:
     - incus-setup
+    - sqlite-setup
+    - etcd-setup
+    - coredns-setup
+    - app-backend
