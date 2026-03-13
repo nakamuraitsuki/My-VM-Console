@@ -1,0 +1,9 @@
+---
+- name: Setup Go environment and application directories
+  import_tasks: setup.yml
+
+- name: Build backend application
+  import_tasks: build.yml
+
+- name: Configure and start backend service
+  import_tasks: service.yml

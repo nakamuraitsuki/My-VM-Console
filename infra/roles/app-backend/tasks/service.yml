@@ -1,0 +1,15 @@
+---
+- name: Create system service unit
+  ansible.builtin.template:
+    src: backend.service.j2
+    dest: /etc/systemd/system/backend.service
+    mode: '0644'
+  register: service_file
+
+- name: Daemon reload and restart if build or service file changed
+  ansible.builtin.systemd:
+    name: backend
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+  when: build_result.changed or service_file.changed
