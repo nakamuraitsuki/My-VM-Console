@@ -1,14 +1,14 @@
 ---
 - name: Create coredns config directory
   ansible.builtin.file:
-    path: "{{ coredins_config_dir }}"
+    path: "{{ coredns_config_dir }}"
     state: directory
     mode: '0755'
 
 - name: Create Corefile from template
   ansible.builtin.template:
     src: Corefile.j2
-    dest: "{{ coredins_config_dir }}/Corefile"
+    dest: "{{ coredns_config_dir }}/Corefile"
     mode: '0644'
   notify: restart coredns
 

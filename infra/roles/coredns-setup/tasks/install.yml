@@ -1,7 +1,7 @@
 ---
 - name: Download CoreDNS binary
   ansible.builtin.unarchive:
-    url: "{{ coredns_download_url }}"
+    src: "{{ coredns_download_url }}"
     dest: /tmp
     remote_src: yes
     creates: /tmp/coredns
