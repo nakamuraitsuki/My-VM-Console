@@ -6,6 +6,7 @@ import (
 
 	"example.com/m/internal/domain/compute"
 	"example.com/m/internal/domain/gateway"
+	"example.com/m/internal/domain/image"
 	"example.com/m/internal/domain/storage"
 	"example.com/m/internal/usecase"
 )
@@ -22,6 +23,7 @@ type executeCreateInstanceInteractor struct {
 	instanceRepo   compute.InstanceRepository
 	ingressRepo    gateway.Repository
 	storageRepo    storage.Repository
+	imgRepo        image.Repository
 	instanceDriver compute.ComputeDriver
 	storageDriver  storage.StorageDriver
 	gatewayDriver  gateway.IngressDriver
@@ -32,6 +34,7 @@ func NewExecuteCreateInstanceInteractor(
 	instanceRepo compute.InstanceRepository,
 	storageRepo storage.Repository,
 	ingressRepo gateway.Repository,
+	imgRepo image.Repository,
 	instanceDriver compute.ComputeDriver,
 	storageDriver storage.StorageDriver,
 	gatewayDriver gateway.IngressDriver,
@@ -41,6 +44,7 @@ func NewExecuteCreateInstanceInteractor(
 		instanceRepo:   instanceRepo,
 		storageRepo:    storageRepo,
 		ingressRepo:    ingressRepo,
+		imgRepo:        imgRepo,
 		instanceDriver: instanceDriver,
 		storageDriver:  storageDriver,
 		gatewayDriver:  gatewayDriver,
@@ -50,12 +54,21 @@ func NewExecuteCreateInstanceInteractor(
 
 func (i *executeCreateInstanceInteractor) Execute(ctx context.Context, payload CreateInstancePayload) error {
 	var inst *compute.Instance
+	var img *image.Image
 
 	if err := i.uow.Do(ctx, func(ctx context.Context) error {
 		var uowErr error
 		inst, uowErr = i.instanceRepo.FindByID(ctx, payload.InstanceID)
 		if uowErr != nil {
 			return compute.ErrInstanceNotFound
+		}
+
+		img, err := i.imgRepo.FindByID(ctx, inst.ImageID())
+		if err != nil {
+			return err
+		}
+		if img == nil {
+			return image.ErrImageNotFound
 		}
 
 		uowErr = inst.MarkAsCreating() // 状態を「作成中」に遷移させる
@@ -86,7 +99,7 @@ func (i *executeCreateInstanceInteractor) Execute(ctx context.Context, payload C
 	}
 
 	// instance
-	err = i.instanceDriver.Create(ctx, inst)
+	err = i.instanceDriver.Create(ctx, inst, img)
 	if err != nil {
 		inst.MarkAsError(compute.ErrInCreating)
 		_ = i.instanceRepo.Save(ctx, inst)

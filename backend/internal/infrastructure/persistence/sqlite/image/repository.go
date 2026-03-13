@@ -52,6 +52,18 @@ func (r *repository) FindAll(ctx context.Context) ([]*image.Image, error) {
 	return results, nil
 }
 
+func (r *repository) FindByID(ctx context.Context, id image.ImageID) (*image.Image, error) {
+	const query = `SELECT * FROM images WHERE id = ?`
+	var m imageModel
+	if err := r.db.GetContext(ctx, &m, query, string(id)); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return r.toEntity(&m), nil
+}
+
 func (r *repository) Save(ctx context.Context, img *image.Image) error {
 	db := sqlite.GetExt(ctx, r.db)
 
