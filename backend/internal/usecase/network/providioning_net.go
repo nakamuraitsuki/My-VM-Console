@@ -9,8 +9,8 @@ import (
 )
 
 type CreateVPCAndDefaultSubnetPayload struct {
-	VPCID    network.VPCID
-	SubnetID network.SubnetID
+	VPCID    network.VPCID    `json:"vpc_id"`
+	SubnetID network.SubnetID `json:"subnet_id"`
 }
 
 type ProvisioningNetworkUseCase interface {
@@ -21,7 +21,7 @@ type provisioningNetworkInteractor struct {
 	userRepo    user.UserRepository
 	networkRepo network.Repository
 	networkSvc  network.NetworkService
-	identitySvc  user.IdentityService
+	identitySvc user.IdentityService
 	driver      network.NetworkDriver
 	uow         usecase.UnitOfWork
 }
@@ -30,7 +30,7 @@ func NewProvisioningNetworkInteractor(
 	userRepo user.UserRepository,
 	networkRepo network.Repository,
 	networkSvc network.NetworkService,
-	identitySvc  user.IdentityService,
+	identitySvc user.IdentityService,
 	driver network.NetworkDriver,
 	uow usecase.UnitOfWork,
 ) ProvisioningNetworkUseCase {
@@ -38,7 +38,7 @@ func NewProvisioningNetworkInteractor(
 		userRepo:    userRepo,
 		networkRepo: networkRepo,
 		networkSvc:  networkSvc,
-		identitySvc:  identitySvc,
+		identitySvc: identitySvc,
 		driver:      driver,
 		uow:         uow,
 	}
@@ -54,18 +54,18 @@ func (i *provisioningNetworkInteractor) Execute(ctx context.Context, payload Cre
 	if err != nil {
 		return err
 	}
-	
+
 	userID := user.UserID(vpc.OwnerID())
 	userData, err := i.userRepo.FindByID(ctx, userID)
 	if err != nil {
 		return err
 	}
-	
+
 	identity, err := i.identitySvc.GetIdentity(ctx, string(userID))
 	if err != nil {
 		return err
 	}
-	
+
 	usr := user.NewUser(
 		userID,
 		identity.DisplayName,
@@ -74,7 +74,7 @@ func (i *provisioningNetworkInteractor) Execute(ctx context.Context, payload Cre
 		userData.Status,
 		userData.ErrorPhase,
 	)
-	
+
 	if err := usr.MarkAsInitializing(); err != nil {
 		return err
 	}

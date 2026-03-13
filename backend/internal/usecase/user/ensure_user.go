@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"example.com/m/internal/domain/network"
@@ -143,7 +144,12 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 		VPCID:    vpcID,
 		SubnetID: subnetID,
 	}
-	if err := i.publisher.Publish(ctx, usecase.JobTypeCreateVPCAndDefaultSubnet, payload); err != nil {
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := i.publisher.Publish(ctx, usecase.JobTypeCreateVPCAndDefaultSubnet, payloadBytes); err != nil {
 		newUser.MarkAsFailed(user.FailedInPending) // ジョブのキューイングに失敗した場合はfailed状態にする
 		_ = i.userRepo.Save(ctx, newUser)          // エラー状態を保存
 		return nil, err

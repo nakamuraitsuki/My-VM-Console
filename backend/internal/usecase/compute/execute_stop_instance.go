@@ -7,7 +7,7 @@ import (
 )
 
 type StopInstancePayload struct {
-	InstanceID compute.InstanceID
+	InstanceID compute.InstanceID `json:"instance_id"`
 }
 
 type ExecuteStopInstanceUseCase interface {

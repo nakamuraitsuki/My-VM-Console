@@ -14,7 +14,7 @@ import (
 )
 
 type CreateInstancePayload struct {
-	InstanceID compute.InstanceID
+	InstanceID compute.InstanceID `json:"instance_id"`
 }
 
 type ExecuteCreateInstanceUseCase interface {

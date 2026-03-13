@@ -2,6 +2,7 @@ package compute
 
 import (
 	"context"
+	"encoding/json"
 
 	"example.com/m/internal/domain/compute"
 	"example.com/m/internal/domain/user"
@@ -11,8 +12,6 @@ import (
 type RequestStopInstanceInput struct {
 	InstanceID compute.InstanceID
 }
-
-
 
 type RequestStopInstanceUseCase interface {
 	Execute(ctx context.Context, input RequestStopInstanceInput) error
@@ -61,11 +60,15 @@ func (i *requestStopInstanceInteractor) Execute(ctx context.Context, input Reque
 		payload := StopInstancePayload{
 			InstanceID: inst.ID(),
 		}
-
-		if err := i.publisher.Publish(ctx, usecase.JobTypeStopInstance, payload); err != nil {
+		payloadBytes, err := json.Marshal(payload)
+		if err != nil {
 			return err
 		}
 		
+		if err := i.publisher.Publish(ctx, usecase.JobTypeStopInstance, payloadBytes); err != nil {
+			return err
+		}
+
 		return nil
 	})
 }

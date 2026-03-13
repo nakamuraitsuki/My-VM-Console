@@ -2,6 +2,7 @@ package compute
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"example.com/m/internal/domain/compute"
@@ -215,7 +216,11 @@ func (i *requestCreateInstanceInteractor) Execute(
 	payload := CreateInstancePayload{
 		InstanceID: instanceID,
 	}
-	if err := i.publisher.Publish(ctx, usecase.JobTypeCreateInstance, payload); err != nil {
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	if err := i.publisher.Publish(ctx, usecase.JobTypeCreateInstance, payloadBytes); err != nil {
 		inst, err := i.instanceRepo.FindByID(ctx, instanceID)
 		if err != nil {
 			return nil, err

@@ -2,6 +2,7 @@ package compute
 
 import (
 	"context"
+	"encoding/json"
 
 	"example.com/m/internal/domain/compute"
 	"example.com/m/internal/domain/user"
@@ -57,7 +58,11 @@ func (i *requestDeleteInstanceInteractor) Execute(ctx context.Context, input Req
 	payload := DeleteInstancePayload{
 		InstanceID: inst.ID(),
 	}
-	if err := i.publisher.Publish(ctx, usecase.JobTypeDeleteInstance, payload); err != nil {
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	if err := i.publisher.Publish(ctx, usecase.JobTypeDeleteInstance, payloadBytes); err != nil {
 		inst.MarkAsError(compute.ErrInDeleting)
 		_ = i.instanceRepo.Save(ctx, inst)
 		return err

@@ -12,7 +12,7 @@ import (
 )
 
 type DeleteInstancePayload struct {
-	InstanceID compute.InstanceID
+	InstanceID compute.InstanceID `json:"instance_id"`
 }
 
 type ExecuteDeleteInstanceUseCase interface {

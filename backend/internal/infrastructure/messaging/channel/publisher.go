@@ -2,8 +2,6 @@ package channel
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"example.com/m/internal/usecase"
 )
@@ -18,12 +16,7 @@ func NewPublisher(hub *Hub) usecase.JobPublisher {
 	}
 }
 
-func (p *publisher) Publish(ctx context.Context, jobType usecase.JobType, payload any) error {
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal message: %w", err)
-	}
-
+func (p *publisher) Publish(ctx context.Context, jobType usecase.JobType, payload []byte) error {
 	p.hub.mu.RLock()
 	defer p.hub.mu.RUnlock()
 
@@ -36,7 +29,7 @@ func (p *publisher) Publish(ctx context.Context, jobType usecase.JobType, payloa
 	for _, ch := range channels {
 		go func(c chan []byte) {
 			select {
-			case c <- data:
+			case c <- payload:
 			case <-ctx.Done():
 			}
 		}(ch)
