@@ -1,5 +1,7 @@
 package network
 
+import "github.com/google/uuid"
+
 type SubnetID string
 
 type Subnet struct {
@@ -12,9 +14,9 @@ type Subnet struct {
 // --- Constructor ---
 
 func NewSubnet(
-	id SubnetID, 
-	vpcID VPCID, 
-	name string, 
+	id SubnetID,
+	vpcID VPCID,
+	name string,
 	cidr string,
 ) *Subnet {
 	return &Subnet{
@@ -23,6 +25,10 @@ func NewSubnet(
 		name:  name,
 		cidr:  cidr,
 	}
+}
+
+func NewSubnetID() SubnetID {
+	return SubnetID("sn-" + uuid.New().String())
 }
 
 // --- Getters ---

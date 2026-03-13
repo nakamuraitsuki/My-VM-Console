@@ -1,5 +1,7 @@
 package image
 
+import "github.com/google/uuid"
+
 type ImageID string
 
 type Image struct {
@@ -26,10 +28,14 @@ func NewImage(
 	}
 }
 
+func NewID() ImageID {
+	return ImageID("img-" + uuid.New().String())
+}
+
 // --- Getter ---
-func (i *Image) ID() ImageID { return i.id }
-func (i *Image) Alias() string { return i.alias }
+func (i *Image) ID() ImageID         { return i.id }
+func (i *Image) Alias() string       { return i.alias }
 func (i *Image) Fingerprint() string { return i.fingerprint }
-func (i *Image) ServerURL() string { return i.serverURL }
-func (i *Image) Protocol() string { return i.protocol }
-func (i *Image) IsPublic() bool { return i.isPublic }
+func (i *Image) ServerURL() string   { return i.serverURL }
+func (i *Image) Protocol() string    { return i.protocol }
+func (i *Image) IsPublic() bool      { return i.isPublic }

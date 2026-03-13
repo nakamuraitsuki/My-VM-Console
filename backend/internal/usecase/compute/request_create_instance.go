@@ -11,7 +11,6 @@ import (
 	"example.com/m/internal/domain/storage"
 	"example.com/m/internal/domain/user"
 	"example.com/m/internal/usecase"
-	"github.com/google/uuid"
 )
 
 type RequestCreateInstanceInput struct {
@@ -39,7 +38,7 @@ type requestCreateInstanceInteractor struct {
 	userRepo       user.UserRepository
 	instanceRepo   compute.InstanceRepository
 	networkRepo    network.Repository
-	gatewayRepo 	gateway.Repository
+	gatewayRepo    gateway.Repository
 	storageRepo    storage.Repository
 	networkService network.NetworkService
 	publisher      usecase.JobPublisher
@@ -60,7 +59,7 @@ func NewRequestCreateInstanceInteractor(
 		userRepo:       userRepo,
 		instanceRepo:   instanceRepo,
 		networkRepo:    networkRepo,
-		gatewayRepo: 	gatewayRepo,
+		gatewayRepo:    gatewayRepo,
 		storageRepo:    storageRepo,
 		networkService: networkService,
 		publisher:      publisher,
@@ -146,7 +145,7 @@ func (i *requestCreateInstanceInteractor) Execute(
 			return errors.New("no available subnets with free IP addresses")
 		}
 
-		instanceID = compute.InstanceID("instance-" + uuid.New().String())
+		instanceID = compute.NewID()
 		lease := network.NewLease(
 			targetSubnet.ID(),
 			string(instanceID),
@@ -157,7 +156,7 @@ func (i *requestCreateInstanceInteractor) Execute(
 		}
 
 		// volume 予約
-		volumeID := storage.VolumeID("volume-" + uuid.New().String())
+		volumeID := storage.NewID()
 		defaultSize := 20 // GB
 		volume := storage.NewVolume(
 			volumeID,
@@ -190,7 +189,7 @@ func (i *requestCreateInstanceInteractor) Execute(
 		}
 
 		// インスタンスを外部に公開する
-		ingressID := gateway.IngressID("ingress-" + uuid.New().String())
+		ingressID := gateway.NewID()
 		subdomain := req.Name
 		// 初期に与えるのはSSH用ルートのみ。必要になったらユーザー自身が追加する。
 		ingressRoute := gateway.NewIngressRoute(

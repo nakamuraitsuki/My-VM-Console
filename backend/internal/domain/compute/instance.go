@@ -7,6 +7,7 @@ import (
 	"example.com/m/internal/domain/network"
 	"example.com/m/internal/domain/storage"
 	"example.com/m/internal/domain/user"
+	"github.com/google/uuid"
 )
 
 var (
@@ -88,6 +89,10 @@ func NewInstance(
 		privateIP:    privateIP,
 		rootVolumeID: rootVolumeID,
 	}
+}
+
+func NewID() InstanceID {
+	return InstanceID("inst-"+uuid.New().String())
 }
 
 // --- Getters ---

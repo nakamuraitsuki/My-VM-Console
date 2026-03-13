@@ -8,7 +8,6 @@ import (
 	"example.com/m/internal/domain/user"
 	"example.com/m/internal/usecase"
 	networkUC "example.com/m/internal/usecase/network"
-	"github.com/google/uuid"
 )
 
 // --- Default Quota ---
@@ -19,7 +18,7 @@ const (
 )
 
 type EnsureUserInput struct {
-	Sub string
+	Sub   string
 	Token string
 }
 
@@ -111,7 +110,7 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 		}
 
 		// save VPC information to repository
-		vpcID = network.VPCID("vpc-" + uuid.New().String())
+		vpcID = network.NewVPCID()
 		usedVPCCIDR, err := i.networkRepo.ListAllUsedCIDRs(ctx)
 		if err != nil {
 			return err
@@ -126,7 +125,7 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 		}
 
 		// save Subnet information to repository
-		subnetID = network.SubnetID("subnet-" + uuid.New().String())
+		subnetID = network.NewSubnetID()
 		// NOTE: Temporary, usedIPs is empty because subnet is not created yet.
 		subnetCidr, err := i.ipCalculator.CalculateNextAvailableSubnet(ctx, vpcCidr, []string{})
 		if err != nil {
@@ -146,7 +145,7 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 	}
 	if err := i.publisher.Publish(ctx, usecase.JobTypeCreateVPCAndDefaultSubnet, payload); err != nil {
 		newUser.MarkAsFailed(user.FailedInPending) // ジョブのキューイングに失敗した場合はfailed状態にする
-		_ = i.userRepo.Save(ctx, newUser)           // エラー状態を保存
+		_ = i.userRepo.Save(ctx, newUser)          // エラー状態を保存
 		return nil, err
 	}
 
