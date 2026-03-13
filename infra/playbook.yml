@@ -11,3 +11,4 @@
   roles:
     - incus-setup
     - sqlite-setup
+    - etcd-setup
