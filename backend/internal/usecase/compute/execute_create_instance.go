@@ -3,10 +3,12 @@ package compute
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"example.com/m/internal/domain/compute"
 	"example.com/m/internal/domain/gateway"
 	"example.com/m/internal/domain/image"
+	"example.com/m/internal/domain/network"
 	"example.com/m/internal/domain/storage"
 	"example.com/m/internal/usecase"
 )
@@ -21,6 +23,7 @@ type ExecuteCreateInstanceUseCase interface {
 
 type executeCreateInstanceInteractor struct {
 	instanceRepo   compute.InstanceRepository
+	networkRepo    network.Repository
 	ingressRepo    gateway.Repository
 	storageRepo    storage.Repository
 	imgRepo        image.Repository
@@ -32,6 +35,7 @@ type executeCreateInstanceInteractor struct {
 
 func NewExecuteCreateInstanceInteractor(
 	instanceRepo compute.InstanceRepository,
+	networkRepo network.Repository,
 	storageRepo storage.Repository,
 	ingressRepo gateway.Repository,
 	imgRepo image.Repository,
@@ -42,6 +46,7 @@ func NewExecuteCreateInstanceInteractor(
 ) ExecuteCreateInstanceUseCase {
 	return &executeCreateInstanceInteractor{
 		instanceRepo:   instanceRepo,
+		networkRepo:    networkRepo,
 		storageRepo:    storageRepo,
 		ingressRepo:    ingressRepo,
 		imgRepo:        imgRepo,
@@ -55,6 +60,7 @@ func NewExecuteCreateInstanceInteractor(
 func (i *executeCreateInstanceInteractor) Execute(ctx context.Context, payload CreateInstancePayload) error {
 	var inst *compute.Instance
 	var img *image.Image
+	var vpc *network.VPC
 
 	if err := i.uow.Do(ctx, func(ctx context.Context) error {
 		var uowErr error
@@ -63,12 +69,20 @@ func (i *executeCreateInstanceInteractor) Execute(ctx context.Context, payload C
 			return compute.ErrInstanceNotFound
 		}
 
-		img, err := i.imgRepo.FindByID(ctx, inst.ImageID())
-		if err != nil {
-			return err
+		img, uowErr = i.imgRepo.FindByID(ctx, inst.ImageID())
+		if uowErr != nil {
+			return uowErr
 		}
 		if img == nil {
 			return image.ErrImageNotFound
+		}
+
+		vpc, uowErr = i.networkRepo.FindVPCByUserID(ctx, inst.OwnerID())
+		if uowErr != nil {
+			return uowErr
+		}
+		if vpc == nil {
+			return fmt.Errorf("VPC not found for user: %s", inst.OwnerID())
 		}
 
 		uowErr = inst.MarkAsCreating() // 状態を「作成中」に遷移させる
@@ -91,7 +105,7 @@ func (i *executeCreateInstanceInteractor) Execute(ctx context.Context, payload C
 	if err != nil {
 		return err
 	}
-	err = i.storageDriver.CreateVolume(ctx, volume)
+	err = i.storageDriver.CreateVolume(ctx, vpc.ID(), volume)
 	if err != nil {
 		inst.MarkAsError(compute.ErrInCreating)
 		_ = i.instanceRepo.Save(ctx, inst) // エラー状態を保存
@@ -103,7 +117,7 @@ func (i *executeCreateInstanceInteractor) Execute(ctx context.Context, payload C
 	if err != nil {
 		inst.MarkAsError(compute.ErrInCreating)
 		_ = i.instanceRepo.Save(ctx, inst)
-		_ = i.storageDriver.DeleteVolume(ctx, volume) // 作成したVolumeを削除
+		_ = i.storageDriver.DeleteVolume(ctx, vpc.ID(), volume) // 作成したVolumeを削除
 		return err
 	}
 

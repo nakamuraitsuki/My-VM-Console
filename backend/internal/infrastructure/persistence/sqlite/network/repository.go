@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"example.com/m/internal/domain/network"
+	"example.com/m/internal/domain/user"
 	"example.com/m/internal/infrastructure/persistence/sqlite"
 	"github.com/jmoiron/sqlx"
 )
@@ -41,6 +42,18 @@ func (r *repository) FindVPCByID(ctx context.Context, id network.VPCID) (*networ
 	const query = `SELECT id, owner_id, name, cidr FROM vpcs WHERE id = ?`
 	var m vpcModel
 	if err := r.db.GetContext(ctx, &m, query, string(id)); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return network.NewVPC(network.VPCID(m.ID), m.OwnerID, m.Name, m.CIDR), nil
+}
+
+func (r *repository) FindVPCByUserID(ctx context.Context, userID user.UserID) (*network.VPC, error) {
+	const query = `SELECT id, owner_id, name, cidr FROM vpcs WHERE owner_id = ?`
+	var m vpcModel
+	if err := r.db.GetContext(ctx, &m, query, userID); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}

@@ -45,6 +45,7 @@ func (d *driver) Create(ctx context.Context, inst *compute.Instance, img *image.
 				"type": "disk",
 				"path": "/",
 				"pool": "default",
+				"source": string(inst.RootVolumeID()), // 事前に作成しておいたVolumeを指定
 			},
 		},
 	}

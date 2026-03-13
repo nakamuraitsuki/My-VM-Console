@@ -2,6 +2,7 @@ package compute
 
 import (
 	"context"
+	"fmt"
 
 	"example.com/m/internal/domain/compute"
 	"example.com/m/internal/domain/gateway"
@@ -60,6 +61,13 @@ func (i *executeDeleteInstanceInteractor) Execute(ctx context.Context, payload D
 	if err != nil {
 		return err
 	}
+	vpc, err := i.networkRepo.FindVPCByUserID(ctx, inst.OwnerID())
+	if err != nil {
+		return err
+	}
+	if vpc == nil {
+		return fmt.Errorf("VPC not found for user: %s", inst.OwnerID())
+	}
 
 	// 各種リソースの物理的削除
 	// Root Volumeの削除
@@ -67,7 +75,7 @@ func (i *executeDeleteInstanceInteractor) Execute(ctx context.Context, payload D
 	if err != nil {
 		return err
 	}
-	if err := i.storageDriver.DeleteVolume(ctx, vol); err != nil {
+	if err := i.storageDriver.DeleteVolume(ctx, vpc.ID(), vol); err != nil {
 		inst.MarkAsError(compute.ErrInDeleting)
 		_ = i.instanceRepo.Save(ctx, inst)
 		return err

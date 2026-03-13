@@ -1,9 +1,14 @@
 package network
 
-import "context"
+import (
+	"context"
+
+	"example.com/m/internal/domain/user"
+)
 
 type Repository interface {
 	FindVPCByID(ctx context.Context, id VPCID) (*VPC, error)
+	FindVPCByUserID(ctx context.Context, userID user.UserID) (*VPC, error)
 	FindSubnetsByVPCID(ctx context.Context, vpcID VPCID) ([]*Subnet, error)
 	FindSubnetByID(ctx context.Context, id SubnetID) (*Subnet, error)
 	SaveVPC(ctx context.Context, vpc *VPC) error

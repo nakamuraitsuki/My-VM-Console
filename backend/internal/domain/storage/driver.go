@@ -1,8 +1,12 @@
 package storage
 
-import "context"
+import (
+	"context"
+
+	"example.com/m/internal/domain/network"
+)
 
 type StorageDriver interface {
-	CreateVolume(ctx context.Context, vol *Volume) error
-	DeleteVolume(ctx context.Context, vol *Volume) error
+	CreateVolume(ctx context.Context, vpcID network.VPCID, vol *Volume) error
+	DeleteVolume(ctx context.Context, vpcID network.VPCID, vol *Volume) error
 }
