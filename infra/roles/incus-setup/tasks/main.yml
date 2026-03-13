@@ -9,42 +9,8 @@
     name: [curl, gnupg]
     state: present
 
-- name: Ensure keyrings directory exists
-  ansible.builtin.file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: '0755'
+- name: Setup Zabbly repository
+  import_tasks: repository.yml
 
-- name: Download Zabbly Incus GPG key
-  ansible.builtin.get_url:
-    url: https://pkgs.zabbly.com/key.asc
-    dest: /etc/apt/keyrings/zabbly.asc
-    mode: '0644'
-
-- name: Add Zabbly Incus LTS 6.0 repository
-  ansible.builtin.copy:
-    dest: /etc/apt/sources.list.d/zabbly-incus-lts-6.0.sources
-    content: |
-      Enabled: yes
-      Types: deb
-      URIs: https://pkgs.zabbly.com/incus/lts-6.0
-      Suites: {{ ansible_distribution_release }}
-      Components: main
-      Architectures: {{ ansible_architecture if ansible_architecture != 'x86_64' else 'amd64' }}
-      Signed-By: /etc/apt/keyrings/zabbly.asc
-    mode: '0644'
-
-- name: Update apt cache
-  ansible.builtin.apt:
-    update_cache: yes
-
-- name: Install Incus
-  ansible.builtin.apt:
-    name: incus
-    update_cache: yes
-    state: present
-
-- name: Initialize Incus with default settings
-  ansible.builtin.shell:
-    cmd: incus admin init --auto
-    creates: /var/lib/incus/unix.socket
+- name: Install and Initialize Incus
+  import_tasks: install.yml

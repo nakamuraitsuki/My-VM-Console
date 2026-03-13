@@ -1,0 +1,11 @@
+---
+- name: Update apt cache and install Incus
+  ansible.builtin.apt:
+    name: incus
+    update_cache: yes
+    state: present
+
+- name: Initialize Incus with default settings
+  ansible.builtin.shell:
+    cmd: incus admin init --auto
+    creates: /var/lib/incus/unix.socket

@@ -1,0 +1,5 @@
+---
+incus_lts_version: "6.0"
+incus_gpg_path: "/etc/apt/keyrings/zabbly.asc"
+incus_repo_file: "/etc/apt/sources.list.d/zabbly-incus.sources"
+incus_architecture: "{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
