@@ -1,0 +1,23 @@
+---
+- name: Create etcd data directory
+  ansible.builtin.file:
+    path: "{{ etcd_data_dir }}"
+    state: directory
+    mode: '0700'
+
+- name: Download and unarchive etcd
+  ansible.builtin.unarchive:
+    src: "{{ etcd_download_url }}"
+    dest: "/tmp"
+    remote_src: yes
+    creates: "/tmp/etcd-{{ etcd_version }}-linux-amd64/etcd"
+
+- name: Copy etcd binaries to install directory
+  ansible.builtin.copy:
+    src: "/tmp/etcd-{{ etcd_version }}-linux-amd64/etcd"
+    dest: "{{ etcd_install_dir }}/{{ item }}"
+    mode: '0755'
+    remote_src: yes
+  loop:
+    - etcd
+    - etcdctl
