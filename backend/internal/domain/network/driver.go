@@ -13,7 +13,7 @@ type NetworkDriver interface {
 	CreateSubnet(ctx context.Context, vpcID VPCID, subnet *Subnet) error
 
 	// 削除も段階的に行えるようにする
-	DeleteSubnet(ctx context.Context, subnetID SubnetID) error
+	DeleteSubnet(ctx context.Context, vpcID VPCID, subnetID SubnetID) error
 	DeleteVPC(ctx context.Context, vpcID VPCID) error
 
 	// 疎通確認用
