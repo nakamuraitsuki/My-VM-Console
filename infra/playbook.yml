@@ -12,3 +12,4 @@
     - incus-setup
     - sqlite-setup
     - etcd-setup
+    - coredns-setup
