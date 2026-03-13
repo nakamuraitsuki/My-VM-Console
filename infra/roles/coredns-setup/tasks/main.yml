@@ -1,0 +1,6 @@
+---
+- name: Install and configure CoreDNS
+  import_tasks: install.yml
+
+- name: Configure CoreDNS
+  import_tasks: configure.yml

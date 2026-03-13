@@ -1,0 +1,9 @@
+---
+# cf. https://coredns.io/
+coredns_version: "1.14.2"
+coredns_download_url: "https://github.com/coredns/coredns/releases/download/v{{ coredns_version }}/coredns_{{ coredns_version }}_linux_amd64.tgz"
+coredins_config_dir: "/etc/coredns"
+coredns_bin_dir: "/usr/local/bin"
+
+internal_domain: "mycloud.local."
+etcd_endpoint: "http://localhost:2379"

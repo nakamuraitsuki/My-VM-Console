@@ -1,0 +1,9 @@
+{{ internal_domain }} {
+  etcd {
+    path /skydns
+    endpoint {{ etcd_endpoint }}
+  }
+  log
+  errors
+  forward . 8.8.8.8 8.8.4.4
+}
