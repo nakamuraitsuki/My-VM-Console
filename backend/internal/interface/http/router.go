@@ -28,11 +28,11 @@ func InitRoutes(
 
 
 	// ユーザ関連のルートを登録
-	userGroup := e.Group("api/user")
+	userGroup := e.Group("api/users")
 	userHandler.RegisterRoutes(userGroup)
 
 	// コンピュート関連のルートを登録
-	computeGroup := e.Group("api/compute")
+	computeGroup := e.Group("api/computes")
 	computeHandler.RegisterRoutes(computeGroup)
 
 	return e
