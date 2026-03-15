@@ -8,7 +8,7 @@ import { useServices } from "./ServiceContext";
 interface AuthContextType {
   session: AuthSession;
   login: () => Promise<Result<AuthSession, AuthError>>;
-  logout: () => Promise<void>;
+  // logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,13 +54,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return failure(result.error);
   }
 
-  const logout = async () => {
-    await authRepo.logout();
-    setSession({ status: 'unauthenticated', user: null });
-  }
-
   return (
-    <AuthContext.Provider value={{ session, login, logout }}>
+    <AuthContext.Provider value={{ session, login }}>
       {children}
     </AuthContext.Provider>
   );
