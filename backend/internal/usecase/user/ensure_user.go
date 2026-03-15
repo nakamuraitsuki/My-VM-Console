@@ -69,6 +69,7 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 		usr := user.NewUser(
 			user.UserID(input.Sub),
 			identity.DisplayName,
+			identity.ProfileImageURL,
 			identity.Permissions,
 			userData.Quota,
 			userData.Status,
@@ -101,6 +102,7 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 		newUser := user.NewUser(
 			user.UserID(input.Sub),
 			identity.DisplayName,
+			identity.ProfileImageURL,
 			identity.Permissions,
 			pUser.Quota,
 			pUser.Status,
