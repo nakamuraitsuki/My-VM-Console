@@ -75,12 +75,13 @@ func NewUser(id UserID, name string, profileImageURL string, perms []Permission,
 }
 
 // --- Getters ---
-func (u *User) ID() UserID              { return u.id }
-func (u *User) DisplayName() string     { return u.displayName }
-func (u *User) ProfileImageURL() string { return u.profileImageURL }
-func (u *User) Quota() UsageQuota       { return u.quota }
-func (u *User) Status() UserStatus      { return u.status }
-func (u *User) ErrPhase() *FailedPhase  { return u.errorPhase }
+func (u *User) ID() UserID                { return u.id }
+func (u *User) DisplayName() string       { return u.displayName }
+func (u *User) ProfileImageURL() string   { return u.profileImageURL }
+func (u *User) Permissions() []Permission { return u.permissions }
+func (u *User) Quota() UsageQuota         { return u.quota }
+func (u *User) Status() UserStatus        { return u.status }
+func (u *User) ErrPhase() *FailedPhase    { return u.errorPhase }
 
 // --- Setters / Domain Logic ---
 func (u *User) UpdateQuota(newQuota UsageQuota) {
