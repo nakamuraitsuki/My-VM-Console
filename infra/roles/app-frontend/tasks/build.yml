@@ -1,0 +1,14 @@
+---
+- name: Build frontend in Docker
+  delegate_to: localhost
+  become: false
+  ansible.builtin.shell: >
+    docker run --rm
+    -u "$(id -u):$(id -u)"
+    -v "{{ frontend_repo_path | realpath }}:{{ frontend_build_workdir }}"
+    -e HOME=/tmp
+    -w {{ frontend_build_workdir }}
+    {{ frontend_node_image }}
+    sh -c "{{ frontend_build_command }}"
+  register: build_result
+  changed_when: "'build' in build_result.stdout"

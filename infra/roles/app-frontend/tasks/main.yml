@@ -1,0 +1,9 @@
+---
+- name: build frontend
+  import_tasks: build.yml
+
+- name: setup frontend
+  import_tasks: setup.yml
+
+- name: deploy frontend
+  import_tasks: deploy.yml

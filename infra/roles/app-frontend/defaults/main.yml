@@ -1,0 +1,25 @@
+---
+# Build settings
+frontend_repo_path: "{{ playbook_dir }}/../frontend/"
+frontend_build_workdir: "/app"
+frontend_node_image: "node:20-slim"
+frontend_build_command: "npm install && npm run build"
+
+# Frontend deploy paths
+frontend_dist_src_path: "{{ playbook_dir }}/../frontend/dist/"
+frontend_web_root: "/var/www/idp-frontend"
+frontend_owner: "www-data"
+frontend_group: "www-data"
+frontend_mode: '0755'
+
+# Nginx vhost settings
+frontend_nginx_template: "idp-frontend.conf.j2"
+frontend_nginx_site_name: "idp-frontend"
+frontend_nginx_sites_available_dir: "/etc/nginx/sites-available"
+frontend_nginx_sites_enabled_dir: "/etc/nginx/sites-enabled"
+frontend_nginx_listen_port: 80
+frontend_domain: "my-app.local"
+frontend_dist_path: "{{ frontend_web_root }}"
+frontend_api_upstream: "http://127.0.0.1:8080"
+frontend_access_log_path: "/var/log/nginx/idp_access.log"
+frontend_error_log_path: "/var/log/nginx/idp_error.log"
