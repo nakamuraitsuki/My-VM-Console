@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"example.com/m/internal/domain/user"
 	"example.com/m/internal/infrastructure/persistence/sqlite"
@@ -35,6 +37,9 @@ WHERE id = ?
 	var um userModel
 	// sqlx.GetContext で一気にマッピング
 	if err := r.db.GetContext(ctx, &um, query, string(id)); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, user.ErrUserNotFound
+		}
 		return nil, err
 	}
 
