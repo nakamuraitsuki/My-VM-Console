@@ -23,9 +23,8 @@ func NewSqlxClient(cfg *Config) *sqlx.DB {
 		panic(fmt.Errorf("failed to open sqlite: %w", err))
 	}
 
-	// 接続設定（SQLiteの定石）
-	db.SetMaxOpenConns(1)
-	db.SetMaxIdleConns(1)
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(10)
 	db.SetConnMaxLifetime(time.Hour)
 
 	// WALモードを有効化し、外部キー制約をONにする
