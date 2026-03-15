@@ -54,7 +54,7 @@ func main() {
 
 	// service
 	// TODO: 権限のマッピングのためのJSONを用意すること
-	filePath := env.GetString("EXTERNAL_AUTH_PERMISSION_MAPPING_FILE", "config/permission_mapping.yaml")
+	filePath := env.GetString("EXTERNAL_AUTH_PERMISSION_MAPPING_FILE", "")
 	apiEndpoint := env.GetString("OAUTH_API_ENDPOINT", "")
 	permissionMapper := mapper.NewPermissionMapper(filePath, 3*time.Hour)
 	netCalcuSvc := networkDomain.NewNetworkService()
