@@ -1,0 +1,64 @@
+:root {
+  font-family: system-ui, sans-serif, BlinkMacSystemFont, sans-serif;
+  line-height: 1.5;
+
+  /* Brand */
+  --color-primary: #646cff;
+  --color-primary-hover: #535bf2;
+
+  /* Background */
+  --color-bg: #ffffff;
+  --color-surface: #f8f8f8;
+  --color-muted-surface: #f1f3f5;
+
+  /* Overlay */
+  --color-overlay: rgba(0, 0, 0, 0.3);
+
+  /* Text */
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+
+  /* Border */
+  --color-border: #e5e7eb;
+
+  /* Layout */
+  --header-height: 64px;
+  --container-width: 1200px;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f172a;
+    --color-surface: #1e293b;
+    --color-muted-surface: #263244;
+
+    --color-text-primary: #f8fafc;
+    --color-text-secondary: #94a3b8;
+    
+    --color-border: #334155;
+    
+    color-scheme: dark;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1, h2, h3 {
+  line-height: 1.2;
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}

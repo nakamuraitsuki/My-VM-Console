@@ -1,0 +1,56 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+
+  background-color: var(--color-bg);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 9999px;
+
+  transition: background-color 0.2s, border-color 0.1s;
+  user-select: none;
+}
+
+.button:hover {
+  /* 背景をブランドカラーの10%程度の薄さにする */
+  background-color: rgba(100, 108, 255, 0.1);
+
+  /* 枠線と文字は少しだけ濃くして、強調する */
+  border-color: var(--color-primary-hover);
+  color: var(--color-primary-hover);
+}
+
+.button:active {
+  background-color: rgba(100, 108, 255, 0.3);
+}
+
+
+.buttonDisabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+
+  background-color: var(--color-muted-surface);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  border-radius: 9999px;
+  opacity: 0.6;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
