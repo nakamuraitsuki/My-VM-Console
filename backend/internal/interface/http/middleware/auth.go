@@ -29,7 +29,7 @@ func AuthMiddleware(
 			ctx := c.Request().Context()
 			// UseCaseを呼び出してユーザー情報を同期
 			resultUser, err := ensureUser.Execute(ctx, user.EnsureUserInput{
-				Sub: userID,
+				Sub:   userID,
 				Token: token,
 			})
 			if err != nil {
@@ -38,7 +38,8 @@ func AuthMiddleware(
 			}
 
 			// Echoのコンテキストにドメインモデルをセット
-			domainUser.WithContext(ctx, resultUser)
+			newCtx := domainUser.WithContext(ctx, resultUser)
+			c.SetRequest(c.Request().WithContext(newCtx))
 
 			return next(c)
 		}
