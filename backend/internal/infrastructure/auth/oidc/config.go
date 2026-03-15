@@ -7,6 +7,7 @@ type OIDCConfig struct {
 	ClientID string
 	ClientSecret string
 	RedirectURL string
+	JWKSURL string
 }
 
 func NewOIDCConfig() *OIDCConfig {
@@ -15,5 +16,6 @@ func NewOIDCConfig() *OIDCConfig {
 		ClientID: env.GetString("OIDC_CLIENT_ID", "a394037d-727b-499e-b9b4-3a78c7615fef"),
 		ClientSecret: env.GetString("OIDC_CLIENT_SECRET", "secret"),
 		RedirectURL: env.GetString("OIDC_REDIRECT_URL", "http://localhost/api/callback"),
+		JWKSURL: env.GetString("OIDC_JWKS_URL", "http://oauth.local:8080/.well-known/jwks.json"),
 	}
 }

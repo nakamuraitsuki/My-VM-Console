@@ -15,11 +15,7 @@ WorkingDirectory={{ app_root }}
 ExecStart={{ app_bin_path }}
 
 # アプリケーションが参照する環境変数を注入
-EXTERNAL_AUTH_PERMISSING_FILE={{ external_auth_perm_file }}
-Environment="DB_PATH={{ db_path }}"
-Environment="ETCD_ENDPOINT={{ etcd_url }}"
-Environment="INCUS_SOCKET_PATH=/var/lib/incus/unix.socket"
-Environment="LOG_LEVEL=debug"
+EnvironmentFile={{ app_env_file }}
 Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin"
 
 # 異常終了時に自動で再起動

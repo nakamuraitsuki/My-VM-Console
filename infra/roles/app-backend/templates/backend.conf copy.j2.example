@@ -1,0 +1,10 @@
+EXTERNAL_AUTH_PERMISSING_FILE={{ external_auth_perm_file }}
+OAUTH_API_ENDPOINT="https://api.id.maximum.vc/oauth/resources/authuser"
+OIDC_ISSUER_URL="https://api.id.maximum.vc"
+OIDC_CLIENT_ID=
+OIDC_CLIENT_SECRET=
+OIDC_REDIRECT_URL="http://my-app.local/api/users/callback"
+OIDC_JWKS_URL="https://api.id.maximum.vc/oauth/jwks"
+BASE_DOMAIN="my-app.local"
+INCUS_SOCKET_PATH="{{ incus_socket }}"
+DB_PATH={{ db_file_path }}

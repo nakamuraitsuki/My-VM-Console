@@ -18,12 +18,13 @@ func NewIDTokenVerifier(cfg *OIDCConfig) *IDTokenVerifier {
 	// 公開鍵取得と管理
 	keySet := oidc.NewRemoteKeySet(
 		ctx,
-		fmt.Sprintf("%s/.well-known/jwks.json", cfg.IssuerURL),
+		cfg.JWKSURL,
 	)
 
 	// 検証設定
 	config := &oidc.Config{
-		ClientID: cfg.ClientID,
+		ClientID:             cfg.ClientID,
+		SupportedSigningAlgs: []string{oidc.ES512, oidc.RS256},
 	}
 
 	verifier := oidc.NewVerifier(cfg.IssuerURL, keySet, config)
@@ -36,7 +37,7 @@ func NewIDTokenVerifier(cfg *OIDCConfig) *IDTokenVerifier {
 type VerifiedClaims struct {
 	Subject string // OIDCのsubクレーム
 	Name    string // OIDCのnameクレーム
-	Nonce  string // OIDCのnonceクレーム
+	Nonce   string // OIDCのnonceクレーム
 }
 
 func (v *IDTokenVerifier) Verify(ctx context.Context, rawIDToken string) (*VerifiedClaims, error) {

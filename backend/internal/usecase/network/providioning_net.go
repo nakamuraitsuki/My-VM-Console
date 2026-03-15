@@ -69,6 +69,7 @@ func (i *provisioningNetworkInteractor) Execute(ctx context.Context, payload Cre
 	usr := user.NewUser(
 		userID,
 		identity.DisplayName,
+		identity.ProfileImageURL,
 		identity.Permissions,
 		userData.Quota,
 		userData.Status,

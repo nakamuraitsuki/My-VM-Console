@@ -13,4 +13,6 @@
     - sqlite-setup
     - etcd-setup
     - coredns-setup
+    - nginx-setup
     - app-backend
+    - app-frontend

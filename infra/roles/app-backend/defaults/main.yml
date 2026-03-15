@@ -6,6 +6,7 @@ go_download_url: "https://go.dev/dl/{{ go_tarball }}"
 src_backend_path: "../backend/"
 app_root: "/home/{{ ansible_user }}/backend"
 app_bin_path: "/usr/local/bin/mycloud-backend"
+app_env_file: "/etc/mycloud/backend.env"
 # 環境変数関連
 db_file_path: "/var/lib/mycloud/metadata.db"
 etcd_url: "http://localhost:2379"

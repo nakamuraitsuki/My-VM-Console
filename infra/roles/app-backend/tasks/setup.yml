@@ -54,6 +54,13 @@
     state: directory
     mode: '0755'
 
+- name: Copy backend config file
+  ansible.builtin.template:
+    src: "backend.conf.j2"
+    dest: "{{ app_env_file }}"
+    mode: '0600'
+  notify: Restart backend service
+
 - name: Copy identity mapping JSON
   ansible.builtin.copy:
     src: "external_auth_perm.json"

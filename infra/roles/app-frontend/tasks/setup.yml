@@ -1,0 +1,8 @@
+---
+- name: Ensure web root exists
+  ansible.builtin.file:
+    path: "{{ frontend_web_root }}"
+    state: directory
+    owner: "{{ frontend_owner }}"
+    group: "{{ frontend_group }}"
+    mode: "{{ frontend_mode }}"

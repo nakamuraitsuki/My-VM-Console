@@ -69,6 +69,7 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 		usr := user.NewUser(
 			user.UserID(input.Sub),
 			identity.DisplayName,
+			identity.ProfileImageURL,
 			identity.Permissions,
 			userData.Quota,
 			userData.Status,
@@ -98,9 +99,10 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 		if err != nil {
 			return err
 		}
-		newUser := user.NewUser(
+		newUser = user.NewUser(
 			user.UserID(input.Sub),
 			identity.DisplayName,
+			identity.ProfileImageURL,
 			identity.Permissions,
 			pUser.Quota,
 			pUser.Status,
@@ -138,7 +140,10 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 		}
 		return nil
 	})
-
+	if err != nil {
+		return nil, err
+	}
+	
 	// create JOB to create VPC and Subnet
 	payload := networkUC.CreateVPCAndDefaultSubnetPayload{
 		VPCID:    vpcID,

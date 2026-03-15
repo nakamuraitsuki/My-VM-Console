@@ -1,0 +1,19 @@
+---
+- name: Transfer build artifacts
+  ansible.builtin.synchronize:
+    src: "{{ frontend_dist_src_path }}"
+    dest: "{{ frontend_web_root }}/"
+    delete: yes
+
+- name: Deploy nginx vhost
+  ansible.builtin.template:
+    src: "{{ frontend_nginx_template }}"
+    dest: "{{ frontend_nginx_sites_available_dir }}/{{ frontend_nginx_site_name }}"
+  notify: Reload nginx
+
+- name: Enable nginx vhost
+  ansible.builtin.file:
+    src: "{{ frontend_nginx_sites_available_dir }}/{{ frontend_nginx_site_name }}"
+    dest: "{{ frontend_nginx_sites_enabled_dir }}/{{ frontend_nginx_site_name }}"
+    state: link
+  notify: Reload nginx

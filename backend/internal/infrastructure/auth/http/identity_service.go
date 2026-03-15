@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -57,10 +56,6 @@ func (s *externalIdentityService) GetIdentity(ctx context.Context, token string)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("failed to fetch user identity from external service")
-	}
-
 	var apiResponse idpResponse
 	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
 		return nil, fmt.Errorf("failed to decode API response: %w", err)
@@ -72,6 +67,7 @@ func (s *externalIdentityService) GetIdentity(ctx context.Context, token string)
 	identity := &user.UserIdentity{
 		ID:              user.UserID(apiResponse.ID),
 		DisplayName:     apiResponse.DisplayName,
+		ProfileImageURL: apiResponse.ProfileImageURL,
 		Permissions:     permissions,
 	}
 

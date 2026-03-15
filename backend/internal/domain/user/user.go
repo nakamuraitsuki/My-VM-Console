@@ -1,6 +1,8 @@
 package user
 
-import "errors"
+import (
+	"errors"
+)
 
 // --- Errors ---
 var (
@@ -50,32 +52,36 @@ type UsageQuota struct {
 }
 
 type User struct {
-	id          UserID
-	displayName string
-	permissions []Permission
-	quota       UsageQuota
-	status      UserStatus
-	errorPhase  *FailedPhase // エラー理由（エラー状態のときのみ値が入る）
+	id              UserID
+	displayName     string
+	profileImageURL string
+	permissions     []Permission
+	quota           UsageQuota
+	status          UserStatus
+	errorPhase      *FailedPhase // エラー理由（エラー状態のときのみ値が入る）
 }
 
 // --- Constructor ---
-func NewUser(id UserID, name string, perms []Permission, quota UsageQuota, status UserStatus, errorPhase *FailedPhase) *User {
+func NewUser(id UserID, name string, profileImageURL string, perms []Permission, quota UsageQuota, status UserStatus, errorPhase *FailedPhase) *User {
 	return &User{
-		id:          id,
-		displayName: name,
-		permissions: perms,
-		quota:       quota,
-		status:      status,
-		errorPhase:  errorPhase,
+		id:              id,
+		displayName:     name,
+		profileImageURL: profileImageURL,
+		permissions:     perms,
+		quota:           quota,
+		status:          status,
+		errorPhase:      errorPhase,
 	}
 }
 
 // --- Getters ---
-func (u *User) ID() UserID             { return u.id }
-func (u *User) DisplayName() string    { return u.displayName }
-func (u *User) Quota() UsageQuota      { return u.quota }
-func (u *User) Status() UserStatus     { return u.status }
-func (u *User) ErrPhase() *FailedPhase { return u.errorPhase }
+func (u *User) ID() UserID                { return u.id }
+func (u *User) DisplayName() string       { return u.displayName }
+func (u *User) ProfileImageURL() string   { return u.profileImageURL }
+func (u *User) Permissions() []Permission { return u.permissions }
+func (u *User) Quota() UsageQuota         { return u.quota }
+func (u *User) Status() UserStatus        { return u.status }
+func (u *User) ErrPhase() *FailedPhase    { return u.errorPhase }
 
 // --- Setters / Domain Logic ---
 func (u *User) UpdateQuota(newQuota UsageQuota) {

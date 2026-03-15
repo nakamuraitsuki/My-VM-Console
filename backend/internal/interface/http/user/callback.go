@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"example.com/m/internal/usecase/user"
 	"github.com/gorilla/sessions"
@@ -64,7 +65,7 @@ func (h *Handler) Callback(c echo.Context) error {
 
 	// JIT Provisioning
 	ensureUserInput := user.EnsureUserInput{
-		Sub: claims.Subject,
+		Sub:   claims.Subject,
 		Token: tokenResponse.AccessToken,
 	}
 	resultUser, err := h.ensureUserUseCase.Execute(ctx, ensureUserInput)
@@ -73,7 +74,7 @@ func (h *Handler) Callback(c echo.Context) error {
 	}
 
 	// ユーザーIDを焼く
-	sess.Values["user_id"] = resultUser
+	sess.Values["user_id"] = string(resultUser.ID())
 	if err := sess.Save(c.Request(), c.Response()); err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func (h *Handler) Callback(c echo.Context) error {
 	h.clearTemporaryCookie(c, "state")
 	h.clearTemporaryCookie(c, "nonce")
 
-	return c.Redirect(http.StatusFound, "/my-page")
+	return c.Redirect(http.StatusFound, "/dashboard")
 }
 
 type TokenResponse struct {
@@ -92,13 +93,12 @@ type TokenResponse struct {
 }
 
 func (h *Handler) exchangeCodeForToken(ctx context.Context, code string) (*TokenResponse, error) {
-	// 1. Bodyには client_secret を含めない
 	values := url.Values{}
 	values.Add("grant_type", "authorization_code")
 	values.Add("code", code)
 	values.Add("redirect_uri", h.oidcConfig.RedirectURL)
 
-	tokenEndpoint := fmt.Sprintf("%s/oauth/token", h.oidcConfig.IssuerURL)
+	tokenEndpoint := fmt.Sprintf("%s/oauth/access-token", h.oidcConfig.IssuerURL)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", tokenEndpoint, strings.NewReader(values.Encode()))
 	if err != nil {
@@ -106,10 +106,10 @@ func (h *Handler) exchangeCodeForToken(ctx context.Context, code string) (*Token
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
 	req.SetBasicAuth(h.oidcConfig.ClientID, h.oidcConfig.ClientSecret)
 
-	resp, err := http.DefaultClient.Do(req)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange code for token: %w", err)
 	}
