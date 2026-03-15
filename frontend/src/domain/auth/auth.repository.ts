@@ -4,7 +4,6 @@ import type { AuthSession } from "./auth.model";
 
 export interface IAuthRepository {
   loginOIDC(): Promise<Result<User, AuthError>>; // OIDC 用
-  logout(): Promise<void>;
   fetchCurrentSession(): Promise<AuthSession>;
 }
 

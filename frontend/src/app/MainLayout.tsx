@@ -24,7 +24,7 @@ export const MainLayout = () => {
             </NavLink>
             {session.status === "authenticated" ? (
               <NavLink
-                to="/my-page"
+                to="/dashboard"
                 className={({ isActive }) =>
                   isActive
                     ? `${styles.navLink} ${styles.active}`

@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router"
 import { MainLayout } from "./MainLayout"
-import { HomePage, LoginPage, MyPage, VideoPlayPage, VideoUploadPage, VideoManagePage } from "./routes"
+import { HomePage, LoginPage } from "./routes"
 
 export const router = createBrowserRouter([
   {
@@ -14,22 +14,6 @@ export const router = createBrowserRouter([
       {
         path: "/login",
         element: <LoginPage />,
-      },
-      {
-        path: "/my-page",
-        element: <MyPage />,
-      },
-      {
-        path: "/upload",
-        element: <VideoUploadPage />,
-      },
-      {
-        path: "/video/:videoId",
-        element: <VideoPlayPage />,
-      },
-      {
-        path: "/manage/:videoId",
-        element: <VideoManagePage />,
       },
       {
         path: "*",

@@ -5,7 +5,6 @@ import { useNavigate } from "react-router";
 export const LoginPage = () => {
   const { session, login } = useAuth();
   const navigate = useNavigate();
-  // 現在はDummyなので、ログイン処理をしてすぐにリダイレクトする
   useEffect(() => {
     // すでに認証済み、または今まさにリクエスト中なら何もしない
     if (session.status === "authenticated" || session.status === "loading") {

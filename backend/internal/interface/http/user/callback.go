@@ -82,7 +82,7 @@ func (h *Handler) Callback(c echo.Context) error {
 	h.clearTemporaryCookie(c, "state")
 	h.clearTemporaryCookie(c, "nonce")
 
-	return c.Redirect(http.StatusFound, "/my-page")
+	return c.Redirect(http.StatusFound, "/dashboard")
 }
 
 type TokenResponse struct {
