@@ -1,9 +1,9 @@
 {
   "mappings": {
-    "admin": [
+    "Admin": [
       "*"
     ],
-    "member": [
+    "Member": [
       "*"
     ]
   }
