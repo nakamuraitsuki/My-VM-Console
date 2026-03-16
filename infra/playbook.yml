@@ -10,6 +10,7 @@
   become: yes
   roles:
     - incus-setup
+    - ovn-setup
     - sqlite-setup
     - etcd-setup
     - coredns-setup

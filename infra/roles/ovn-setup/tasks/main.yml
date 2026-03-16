@@ -1,0 +1,3 @@
+---
+- name: Install OVN and OVS packages
+  import_tasks: install.yml
