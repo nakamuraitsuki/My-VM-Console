@@ -4,7 +4,7 @@
   become: false
   ansible.builtin.shell: >
     docker run --rm
-    -u "$(id -u):$(id -u)"
+    -u "$(id -u):$(id -g)"
     -v "{{ frontend_repo_path | realpath }}:{{ frontend_build_workdir }}"
     -e HOME=/tmp
     -w {{ frontend_build_workdir }}

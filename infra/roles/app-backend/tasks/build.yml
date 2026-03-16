@@ -1,21 +1,37 @@
 ---
-- name: Synchronize source code
-  ansible.posix.synchronize:
-    src: "{{ src_backend_path }}"
-    dest: "{{ app_root }}"
-    delete: yes
-    recursive: yes
-    rsync_opts:
-      - "--exclude=.git"
-      - "--exclude=bin"
+- name: Build backend binary locally
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure local bin directory exists
+      ansible.builtin.file:
+        path: "{{ backend_repo_path }}/bin"
+        state: directory
+        mode: '0755'
 
-- name: Download Go dependencies
-  ansible.builtin.shell:
-    cmd: "/usr/local/go/bin/go mod download"
-    chdir: "{{ app_root }}"
+    - name: Docker build backend
+      ansible.builtin.shell:
+        cmd: "docker build -t mycloud-builder -f {{ backend_repo_path }}/Dockerfile {{ backend_repo_path }}"
+      register: build_res
 
-- name: Build backend binary
-  ansible.builtin.shell:
-    cmd: "/usr/local/go/bin/go build -o {{ app_bin_path }} cmd/main.go"
-    chdir: "{{ app_root }}"
-  register: build_result
+    - name: Create temporary container for build
+      ansible.builtin.shell: "docker create --name tmp-builder mycloud-builder"
+      when: build_res.rc == 0
+    
+    - name: Extract binary from container
+      ansible.builtin.shell: "docker cp tmp-builder:/bin/{{ backend_app_name }} {{ backend_repo_path }}/bin/{{ backend_app_name }}"
+      register: cp_res
+      when: build_res.rc == 0
+
+    - name: Verify extracted binary existance and size
+      ansible.builtin.stat:
+        path: "{{ backend_repo_path }}/bin/{{ backend_app_name }}"
+      register: binary_stat
+      failed_when:
+        - not binary_stat.stat.exists
+        - binary_stat.stat.size == 0
+
+  always:
+    - name: Final cleanup of build container
+      ansible.builtin.shell: "docker rm -f tmp-builder"
+      ignore_errors: true

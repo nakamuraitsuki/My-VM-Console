@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 type DB interface {
@@ -18,11 +18,13 @@ type DB interface {
 
 func NewSqlxClient(cfg *Config) *sqlx.DB {
 	// 接続
-	db, err := sqlx.Open("sqlite3", cfg.DBPath)
+	db, err := sqlx.Open("sqlite", cfg.DBPath)
 	if err != nil {
 		panic(fmt.Errorf("failed to open sqlite: %w", err))
 	}
 
+	// 頼むから10コネクションでも整合性を保ってくれ
+	// 厳しくなってきたら、Postgresへの移行も検討する
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(10)
 	db.SetConnMaxLifetime(time.Hour)
