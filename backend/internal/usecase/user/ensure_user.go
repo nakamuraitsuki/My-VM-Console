@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 
 	"example.com/m/internal/domain/network"
 	"example.com/m/internal/domain/user"
@@ -55,15 +56,22 @@ func NewEnsureUserInteractor(
 }
 
 func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInput) (*user.User, error) {
+	log.Printf("[EnsureUser] start: sub=%s", input.Sub)
+
 	// check existing user
+	log.Printf("[EnsureUser] step=check_existing_user: sub=%s", input.Sub)
 	userData, err := i.userRepo.FindByID(ctx, user.UserID(input.Sub))
 	if err != nil && !errors.Is(err, user.ErrUserNotFound) {
+		log.Printf("[EnsureUser] step=check_existing_user result=error sub=%s err=%v", input.Sub, err)
 		return nil, err
 	}
 	if userData != nil {
+		log.Printf("[EnsureUser] step=check_existing_user result=found sub=%s", input.Sub)
 		// if exist, return user information
+		log.Printf("[EnsureUser] step=load_identity_for_existing_user: sub=%s", input.Sub)
 		identity, err := i.identitySvc.GetIdentity(ctx, input.Token)
 		if err != nil {
+			log.Printf("[EnsureUser] step=load_identity_for_existing_user result=error sub=%s err=%v", input.Sub, err)
 			return nil, err
 		}
 		usr := user.NewUser(
@@ -75,8 +83,10 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 			userData.Status,
 			userData.ErrorPhase,
 		)
+		log.Printf("[EnsureUser] done: existing_user_returned sub=%s", input.Sub)
 		return usr, nil
 	}
+	log.Printf("[EnsureUser] step=check_existing_user result=not_found sub=%s", input.Sub)
 
 	// if not exist, create new user
 	// create user in database( only persist id and quote )
@@ -84,7 +94,9 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 	var newUser *user.User
 	var vpcID network.VPCID
 	var subnetID network.SubnetID
+	log.Printf("[EnsureUser] step=create_new_user_flow_begin sub=%s", input.Sub)
 	err = i.uow.Do(ctx, func(ctx context.Context) error {
+		log.Printf("[EnsureUser] step=uow_begin sub=%s", input.Sub)
 		pUser := &user.UserPersistentData{
 			ID: user.UserID(input.Sub),
 			Quota: user.UsageQuota{
@@ -95,8 +107,10 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 			Status: user.UserStatusPending, // At first, set status to pending
 			// FailedPhase is nil at first.
 		}
+		log.Printf("[EnsureUser] step=load_identity_for_new_user: sub=%s", input.Sub)
 		identity, err := i.identitySvc.GetIdentity(ctx, input.Token)
 		if err != nil {
+			log.Printf("[EnsureUser] step=load_identity_for_new_user result=error sub=%s err=%v", input.Sub, err)
 			return err
 		}
 		newUser = user.NewUser(
@@ -108,57 +122,93 @@ func (i *ensureUserInteractor) Execute(ctx context.Context, input EnsureUserInpu
 			pUser.Status,
 			pUser.ErrorPhase,
 		)
+		log.Printf("[EnsureUser] step=save_new_user: sub=%s", input.Sub)
 		if err := i.userRepo.Save(ctx, newUser); err != nil {
+			log.Printf("[EnsureUser] step=save_new_user result=error sub=%s err=%v", input.Sub, err)
 			return err
 		}
+		log.Printf("[EnsureUser] step=save_new_user result=success sub=%s", input.Sub)
 
 		// save VPC information to repository
+		log.Printf("[EnsureUser] step=create_vpc_begin sub=%s", input.Sub)
 		vpcID = network.NewVPCID()
 		usedVPCCIDR, err := i.networkRepo.ListAllUsedCIDRs(ctx)
 		if err != nil {
+			log.Printf("[EnsureUser] step=list_used_vpc_cidrs result=error sub=%s err=%v", input.Sub, err)
 			return err
 		}
+		log.Printf("[EnsureUser] step=calculate_next_vpc_cidr sub=%s", input.Sub)
 		vpcCidr, err := i.ipCalculator.CalculateNextAvailableVPCCIDR(ctx, usedVPCCIDR)
 		if err != nil {
+			log.Printf("[EnsureUser] step=calculate_next_vpc_cidr result=error sub=%s err=%v", input.Sub, err)
 			return err
 		}
 		vpc := network.NewVPC(vpcID, string(newUser.ID()), "vpc-default", vpcCidr)
+		log.Printf("[EnsureUser] step=save_vpc sub=%s vpc_id=%s cidr=%s", input.Sub, vpcID, vpcCidr)
 		if err := i.networkRepo.SaveVPC(ctx, vpc); err != nil {
+			log.Printf("[EnsureUser] step=save_vpc result=error sub=%s vpc_id=%s err=%v", input.Sub, vpcID, err)
 			return err
 		}
+		log.Printf("[EnsureUser] step=save_vpc result=success sub=%s vpc_id=%s", input.Sub, vpcID)
 
 		// save Subnet information to repository
+		log.Printf("[EnsureUser] step=create_subnet_begin sub=%s vpc_id=%s", input.Sub, vpcID)
 		subnetID = network.NewSubnetID()
 		// NOTE: Temporary, usedIPs is empty because subnet is not created yet.
+		log.Printf("[EnsureUser] step=calculate_next_subnet_cidr sub=%s vpc_id=%s", input.Sub, vpcID)
 		subnetCidr, err := i.ipCalculator.CalculateNextAvailableSubnet(ctx, vpcCidr, []string{})
 		if err != nil {
+			log.Printf("[EnsureUser] step=calculate_next_subnet_cidr result=error sub=%s vpc_id=%s err=%v", input.Sub, vpcID, err)
 			return err
 		}
 		subnet := network.NewSubnet(subnetID, vpcID, "subnet-default", subnetCidr)
+		log.Printf("[EnsureUser] step=save_subnet sub=%s subnet_id=%s cidr=%s", input.Sub, subnetID, subnetCidr)
 		if err := i.networkRepo.SaveSubnet(ctx, subnet); err != nil {
+			log.Printf("[EnsureUser] step=save_subnet result=error sub=%s subnet_id=%s err=%v", input.Sub, subnetID, err)
 			return err
 		}
+		log.Printf("[EnsureUser] step=save_subnet result=success sub=%s subnet_id=%s", input.Sub, subnetID)
+		log.Printf("[EnsureUser] step=uow_end result=success sub=%s", input.Sub)
 		return nil
 	})
 	if err != nil {
+		log.Printf("[EnsureUser] step=create_new_user_flow result=error sub=%s err=%v", input.Sub, err)
 		return nil, err
 	}
-	
+	log.Printf("[EnsureUser] step=create_new_user_flow result=success sub=%s vpc_id=%s subnet_id=%s", input.Sub, vpcID, subnetID)
+
 	// create JOB to create VPC and Subnet
+	log.Printf("[EnsureUser] step=create_job_payload sub=%s", input.Sub)
 	payload := networkUC.CreateVPCAndDefaultSubnetPayload{
 		VPCID:    vpcID,
 		SubnetID: subnetID,
 	}
+	payload.Identity.DisplayName = newUser.DisplayName()
+	payload.Identity.ProfileImageURL = newUser.ProfileImageURL()
+	permissionStrings := make([]string, 0, len(newUser.Permissions()))
+	for _, perm := range newUser.Permissions() {
+		permissionStrings = append(permissionStrings, string(perm))
+	}
+	payload.Identity.Permissions = permissionStrings
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
+		log.Printf("[EnsureUser] step=create_job_payload result=error sub=%s err=%v", input.Sub, err)
 		return nil, err
 	}
 
+	log.Printf("[EnsureUser] step=publish_job sub=%s job_type=%s", input.Sub, usecase.JobTypeCreateVPCAndDefaultSubnet)
 	if err := i.publisher.Publish(ctx, usecase.JobTypeCreateVPCAndDefaultSubnet, payloadBytes); err != nil {
+		log.Printf("[EnsureUser] step=publish_job result=error sub=%s err=%v", input.Sub, err)
 		newUser.MarkAsFailed(user.FailedInPending) // ジョブのキューイングに失敗した場合はfailed状態にする
-		_ = i.userRepo.Save(ctx, newUser)          // エラー状態を保存
+		if saveErr := i.userRepo.Save(ctx, newUser); saveErr != nil {
+			log.Printf("[EnsureUser] step=mark_user_failed_save result=error sub=%s err=%v", input.Sub, saveErr)
+		} else {
+			log.Printf("[EnsureUser] step=mark_user_failed_save result=success sub=%s", input.Sub)
+		}
 		return nil, err
 	}
+	log.Printf("[EnsureUser] step=publish_job result=success sub=%s", input.Sub)
+	log.Printf("[EnsureUser] done: new_user_returned sub=%s", input.Sub)
 
 	return newUser, nil
 }

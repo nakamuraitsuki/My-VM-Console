@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -60,6 +61,7 @@ func (s *externalIdentityService) GetIdentity(ctx context.Context, token string)
 	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
 		return nil, fmt.Errorf("failed to decode API response: %w", err)
 	}
+	log.Printf("[IdentityService] Response from IDP: id=%s display_id=%s display_name=%s roles=%v", apiResponse.ID, apiResponse.DisplayID, apiResponse.DisplayName, apiResponse.Roles)
 
 	permissions := s.mapper.MapToPermissions(apiResponse.Roles)
 
