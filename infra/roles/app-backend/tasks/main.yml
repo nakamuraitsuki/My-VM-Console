@@ -5,5 +5,5 @@
 - name: Build backend application
   import_tasks: build.yml
 
-- name: Configure and start backend service
-  import_tasks: service.yml
+- name: Deploy backend application and configure service
+  import_tasks: deploy.yml

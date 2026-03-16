@@ -1,0 +1,22 @@
+---
+- name: Deploy backend binary to remote
+  ansible.builtin.synchronize:
+    src: "{{ backend_repo_path }}/bin/{{ backend_app_name }}"
+    dest: "/usr/local/bin/{{ backend_app_name }}"
+    archive: yes
+  register: rsync_result
+
+- name: Create system service unit
+  ansible.builtin.template:
+    src: backend.service.j2
+    dest: /etc/systemd/system/backend.service
+    mode: '0644'
+  register: service_file
+
+- name: Force restart backend
+  ansible.builtin.systemd:
+    name: backend 
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+  when: rsync_result.changed or service_file.changed
