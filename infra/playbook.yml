@@ -11,6 +11,7 @@
   roles:
     - incus-setup
     - ovn-setup
+    - incus-network-setup
     - sqlite-setup
     - etcd-setup
     - coredns-setup

@@ -1,0 +1,6 @@
+---
+- name: Include configuration tasks
+  import_tasks: config.yml
+
+- name: Provision OVN uplink bridge and configure IP ranges
+  import_tasks: provision.yml
