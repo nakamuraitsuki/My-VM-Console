@@ -1,0 +1,10 @@
+---
+# https://incus-ja.readthedocs.io/ja/latest/howto/network_ovn_setup/#network-ovn-setup
+- name: Register OVS to OVN
+  ansible.builtin.command:
+    cmd: >
+      ovs-vsctl set open_vswitch . \
+      external_ids:ovn-remote=unix:/run/ovn/ovnsb_db.sock \
+      external_ids:ovn-encap-type=geneve \
+      external_ids:ovn-encap-ip={{ ansible_eth1.inet.address}}
+  change_when: false
