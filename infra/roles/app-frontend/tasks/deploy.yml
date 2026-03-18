@@ -1,9 +1,19 @@
 ---
 - name: Transfer build artifacts
-  ansible.builtin.synchronize:
-    src: "{{ frontend_dist_src_path }}"
-    dest: "{{ frontend_web_root }}/"
-    delete: yes
+  block:
+    - name: Try to deploy frontend using rsync
+      ansible.builtin.synchronize:
+        src: "{{ frontend_dist_src_path }}"
+        dest: "{{ frontend_web_root }}/"
+        delete: yes
+      register: rsync_result
+  rescue:
+    - name: Fallback to copy
+      ansible.builtin.copy:
+        src: "{{ frontend_dist_src_path }}"
+        dest: "{{ frontend_web_root }}"
+        mode: '0755'
+      register: rsync_result
 
 - name: Deploy nginx vhost
   ansible.builtin.template:

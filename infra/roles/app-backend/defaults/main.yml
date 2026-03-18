@@ -2,7 +2,7 @@
 # app_name
 backend_app_name: "mycloud-backend"
 # Build settings
-backend_repo_path: "{{ playbook_dir }}/../backend/"
+backend_repo_path: "{{ playbook_dir }}/../backend"
 backend_build_workdir: "/app"
 backend_golang_image: "golang:1.25-alpine"
 
@@ -13,6 +13,7 @@ app_env_file: "/etc/{{ backend_app_name }}/backend.conf"
 
 # 環境変数関連
 app_root: "/home/{{ ansible_user }}/{{ backend_app_name }}"
+log_dir: "/var/log/{{ backend_app_name }}"
 db_file_path: "/var/lib/mycloud/metadata.db"
 etcd_url: "http://localhost:2379"
 incus_socket: "/var/lib/incus/unix.socket"

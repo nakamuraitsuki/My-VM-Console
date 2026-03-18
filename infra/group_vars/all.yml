@@ -1,0 +1,7 @@
+---
+ovn_uplink_nic: "ovn-dummy"
+ovn_uplink_ip: "10.128.0.1/24"    # ホスト側の待ち受けIP
+vpc_global_route: "10.0.0.0/8"    # 全てのVPCが収まる大きな枠
+
+"global_ip_domain": "my-app.local
+"cloud_domain": "cloud.{{ global_ip_domain }}"

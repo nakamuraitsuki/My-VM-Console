@@ -1,0 +1,29 @@
+---
+# ovn-uplink (physical) の parent となる interface を作る
+- name: Create dummy NIC for OVN uplink
+  become: true # 権限必要
+  ansible.builtin.shell: |
+    ip link add name {{ ovn_uplink_nic }} type dummy
+    ip link set {{ ovn_uplink_nic }} up
+  register: create_dummy_result
+  changed_when: "'already exists' not in create_dummy_result.stderr"
+  tags: [network, host]
+
+# iface に IP を割り当てる(GW として機能させるため)
+- name: Assign IP to dummy interface 
+  become: true
+  ansible.builtin.shell: |
+    ip addr add {{ ovn_uplink_ip }} dev {{ ovn_uplink_nic }} || true
+  register: assign_ip_result
+  changed_when: "'already exists' not in assign_ip_result.stderr"
+  tags: [network, host]
+
+  # VPC全体の帯域へのスタティックルートを追加
+- name: Add Static Route for VPC network range
+  become: true
+  ansible.builtin.shell: |
+    ip route add {{ vpc_global_route }} dev {{ ovn_uplink_nic }} || true
+  register: add_route_result
+  # 'File exists' エラーが出た場合は changed を false にする
+  changed_when: "'exists' not in add_route_result.stderr"
+  tags: [network, host]

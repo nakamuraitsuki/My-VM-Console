@@ -12,6 +12,14 @@
     group: "{{ ansible_user }}"
     mode: '0755'
   
+- name: Ensure log directory exists
+  ansible.builtin.file:
+    path: "{{ log_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+    
 - name: Create app config directory
   ansible.builtin.file:
     path: "/etc/{{ backend_app_name }}"

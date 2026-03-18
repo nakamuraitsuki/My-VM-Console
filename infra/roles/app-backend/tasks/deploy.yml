@@ -1,10 +1,20 @@
 ---
 - name: Deploy backend binary to remote
-  ansible.builtin.synchronize:
-    src: "{{ backend_repo_path }}/bin/{{ backend_app_name }}"
-    dest: "/usr/local/bin/{{ backend_app_name }}"
-    archive: yes
-  register: rsync_result
+  block:
+    - name: Try to deploy binary using rsync
+      ansible.builtin.synchronize:
+        src: "{{ backend_repo_path }}/bin/{{ backend_app_name }}"
+        dest: "/usr/local/bin/{{ backend_app_name }}"
+        archive: yes
+      register: rsync_result
+
+  rescue:
+    - name: Fallback to copy
+      ansible.builtin.copy:
+        src: "{{ backend_repo_path }}/bin/{{ backend_app_name }}"
+        dest: "/usr/local/bin/{{ backend_app_name }}"
+        mode: '0755'
+      register: rsync_result
 
 - name: Create system service unit
   ansible.builtin.template:

@@ -1,0 +1,11 @@
+---
+- name: Initialize Incus with default settings
+  ansible.builtin.shell:
+    cmd: incus admin init --auto
+    creates: /var/lib/incus/unix.socket
+
+- name: Link Incus to OVN Northbound DB
+  ansible.builtin.command:
+    cmd: incus config set network.ovn.northbound_connection unix:/run/ovn/ovnnb_db.sock
+  become: true
+  notify: Restart Incus

@@ -14,3 +14,6 @@
 
 - name: Install and Initialize Incus
   import_tasks: install.yml
+
+- name: Configure Incus to connect to OVN
+  import_tasks: config.yml

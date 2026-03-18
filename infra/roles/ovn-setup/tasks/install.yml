@@ -1,7 +1,4 @@
 ---
-# https://docs.ovn.org/en/latest/intro/install/distributions.html#debian
-# ちょっと古いけど、一応参考にする
-
 # ovs に依存がある
 - name: install OVS
   ansible.builtin.apt:

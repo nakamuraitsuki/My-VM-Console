@@ -1,0 +1,10 @@
+server {
+    listen 80;
+    server_name *.{{ cloud_domain }};
+
+    resolver 127.0.0.1 valid=5s;
+
+    location / {
+        proxy_pass http://$host:80;
+    }
+}

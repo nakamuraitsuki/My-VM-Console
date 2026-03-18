@@ -1,0 +1,5 @@
+---
+- name: Restart Incus
+  ansible.builtin.service:
+    name: incus
+    state: restarted

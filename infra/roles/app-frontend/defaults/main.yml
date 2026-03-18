@@ -2,7 +2,7 @@
 # App Name
 frontend_app_name: "idp-frontend"
 # Build settings
-frontend_repo_path: "{{ playbook_dir }}/../frontend/"
+frontend_repo_path: "{{ playbook_dir }}/../frontend"
 frontend_build_workdir: "/app"
 frontend_node_image: "node:20-slim"
 frontend_build_command: "npm install && npm run build"
@@ -20,7 +20,7 @@ frontend_nginx_site_name: "{{ frontend_app_name }}"
 frontend_nginx_sites_available_dir: "/etc/nginx/sites-available"
 frontend_nginx_sites_enabled_dir: "/etc/nginx/sites-enabled"
 frontend_nginx_listen_port: 80
-frontend_domain: "my-app.local"
+frontend_domain: "{{ global_ip_domain }}"
 frontend_dist_path: "{{ frontend_web_root }}"
 frontend_api_upstream: "http://127.0.0.1:8080"
 frontend_access_log_path: "/var/log/nginx/{{ frontend_app_name }}_access.log"

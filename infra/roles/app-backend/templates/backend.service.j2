@@ -23,8 +23,8 @@ Restart=always
 RestartSec=5
 
 # 標準出力とエラー出力をシステムログ（journald）に送る
-StandardOutput=append:/var/log/mycloud/backend.log
-StandardError=append:/var/log/mycloud/backend.log
+StandardOutput=append:{{ log_dir }}/backend.log
+StandardError=append:{{ log_dir }}/backend.log
 
 [Install]
 WantedBy=multi-user.target
