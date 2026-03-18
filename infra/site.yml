@@ -1,0 +1,35 @@
+---
+- name: Connection Check
+  hosts: all
+  tasks: 
+    - name: Ping the server
+      ping:
+
+- name: Setup Infrastructure
+  hosts: all
+  become: yes
+  roles:
+    # 物理ネットワーク系
+    - role: host-network-setup
+      tags: [network, host]
+
+    # 必要なソフトウェアのインストール
+    - role: ovn-setup
+      tags: [ovn]
+    - role: incus-setup
+      tags: [incus]
+    - role: nginx-setup
+      tags: [nginx]
+    - role: sqlite-setup
+      tags: [sqlite]
+    - role: etcd-setup
+      tags: [etcd]
+    - role: coredns-setup
+      tags: [coredns]
+
+    # ネットワークの構築
+    - role: incus-ovn-uplink
+      tags: [network, incus, ovn]
+    - incus-network-setup
+    - app-backend
+    - app-frontend
