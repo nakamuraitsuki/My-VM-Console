@@ -40,6 +40,26 @@ func (d *driver) CreateVPC(ctx context.Context, vpc *network.VPC) error {
 		return err
 	}
 
+	// VPC専用のネットワーク生成
+	pc := d.client.UseProject(string(vpc.ID()))
+	mainNetwork := api.NetworksPost{
+		Name: "vpc-main",
+		Type: "ovn",
+		NetworkPut: api.NetworkPut{
+			Config: map[string]string{
+				"network":          "ovn-uplink",
+				"ovn.ingress_mode": "l2proxy",
+				"ipv4.address":     "10.0.0.1/24",
+				"ipv4.nat":         "true",
+			},
+		},
+	}
+
+	err = pc.CreateNetwork(mainNetwork)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -51,11 +71,13 @@ func (d *driver) CreateSubnet(ctx context.Context, vpcID network.VPCID, subnet *
 
 	req := api.NetworksPost{
 		Name: bridgeName,
-		Type: "bridge",
+		Type: "ovn",
 		NetworkPut: api.NetworkPut{
 			Config: map[string]string{
+				"network":      "vpc-main",
 				"ipv4.address": subnet.CIDR(),
 				"ipv4.nat":     "true",
+				"ipv4.dhcp":    "true",
 			},
 		},
 	}
