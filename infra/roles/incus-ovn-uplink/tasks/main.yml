@@ -13,7 +13,7 @@
       incus network create {{ incus_uplink_bridge_name }}
       --type=physical
       parent={{ ovn_uplink_nic }}
-      ipv4.gateway={{ ovn_uplink_ip.split('/')[0] }}
+      ipv4.gateway={{ ovn_uplink_ip }}
       ipv4.ovn.ranges={{ incus_ovn_external_range }}
   when: bridge_check.rc != 0
 
@@ -22,7 +22,5 @@
     cmd: >
       incus network set {{ incus_uplink_bridge_name }}
       ipv4.ovn.ranges={{ incus_ovn_external_range }}
-      ipv4.nat=true
-      dns.mode=managed
       ovn.ingress_mode=routed
   changed_when: true

@@ -1,7 +1,7 @@
 ---
 - name: Connection Check
   hosts: all
-  tasks: 
+  tasks:
     - name: Ping the server
       ping:
 
@@ -34,7 +34,7 @@
     # ネットワークの構築
     - role: incus-ovn-uplink
       tags: [network, incus, ovn]
-      
+
     - role: app-backend
       tags: [app, backend]
     - role: app-frontend
