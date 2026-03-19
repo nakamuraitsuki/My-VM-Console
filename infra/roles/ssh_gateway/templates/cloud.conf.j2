@@ -1,0 +1,12 @@
+# Managed by Ansible: Cloud Gateway Configuration
+
+TrustedUserCAKeys /etc/ssh/ca/cloud_ca.pub
+AuthorizedPrincipalsFile /etc/ssh/principals/%u
+
+Match User {{ jump_user_name | default('jumpuser') }}
+    AllowTcpForwarding yes
+    X11Forwarding no
+    PermitTunnel no
+    AllowAgentForwarding yes
+    ForceCommand /usr/bin/false
+    PasswordAuthentication no

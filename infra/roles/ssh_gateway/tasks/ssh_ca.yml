@@ -1,0 +1,33 @@
+---
+- name: Create directory for SSH CA
+  ansible.builtin.file:
+    path: /etc/ssh/ca
+    state: directory
+    mode: '0700'
+    owner: root
+
+- name: Generate SSH CA Private/Public Keys
+  ansible.builtin.command:
+    cmd: ssh-keygen -t ed25519 -f /etc/ssh/ca/cloud_ca -N ""
+    creates: /etc/ssh/ca/cloud_ca
+
+# NOTE: backend がroot権限で動く前提のため権限操作はしない。
+#       もし、backend を非rootで動かす場合はここに追記すること
+
+- name: Create Auth Principals directory
+  ansible.builtin.file:
+    path: /etc/ssh/auth_principals
+    state: directory
+    mode: '0755'
+
+- name: Define allowed principals for jumpuser
+  ansible.builtin.copy:
+    dest: /etc/ssh/auth_principals/{{ jump_user_name | default('jumpuser') }}
+    content: "{{ jump_user_name | default('jumpuser') }}"
+
+- name: Deploy Modular SSHD Config
+  ansible.builtin.template:
+    src: ituki_cloud.conf.j2
+    dest: /etc/ssh/sshd_config.d/cloud.conf
+    mode: '0644'
+  notify: Restart sshd

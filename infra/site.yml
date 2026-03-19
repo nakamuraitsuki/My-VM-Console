@@ -13,6 +13,10 @@
     - role: host-network-setup
       tags: [network, host]
 
+    # SSH Gateway
+    - role: ssh_gateway
+      tags: [ssh]
+
     # 必要なソフトウェアのインストール
     - role: ovn-setup
       tags: [ovn]
@@ -30,6 +34,8 @@
     # ネットワークの構築
     - role: incus-ovn-uplink
       tags: [network, incus, ovn]
-    - incus-network-setup
-    - app-backend
-    - app-frontend
+      
+    - role: app-backend
+      tags: [app, backend]
+    - role: app-frontend
+      tags: [app, frontend]

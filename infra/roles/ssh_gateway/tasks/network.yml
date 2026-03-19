@@ -1,0 +1,17 @@
+---
+# ip forwarding
+- name: Enable IPv4 forwarding
+  ansible.builtin.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    reload: yes
+
+- name: Setup IP Masquerade for outbound traffic from OVN network
+  become: true
+  ansible.builtin.iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: "{{ main_nic }}"
+    jump: MASQUERADE
+    comment: "Allow OVN VMs (via dummy0) to access Internet"

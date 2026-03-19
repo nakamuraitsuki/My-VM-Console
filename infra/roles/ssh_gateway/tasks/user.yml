@@ -1,0 +1,8 @@
+---
+# Create a user for SSH gateway
+- name: Create Jump user
+  ansible.builtin.user:
+    name: "{{ jump_user_name | default('jumpuser') }}"
+    shell: /usr/bin/nologin
+    create_home: yes
+    home: /home/{{ jump_user_name | default('jumpuser') }}

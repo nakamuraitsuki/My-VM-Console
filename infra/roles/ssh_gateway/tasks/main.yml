@@ -1,0 +1,7 @@
+---
+- name: Setup Network Forwarding
+  import_tasks: network.yml
+- name: Setup Jump User
+  import_tasks: user.yml
+- name: Setup SSH CA
+  import_tasks: ssh_ca.yml
