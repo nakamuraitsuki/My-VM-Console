@@ -33,7 +33,7 @@
 
     # ネットワークの構築
     - role: incus-ovn-uplink
-      tags: [network, incus, ovn]
+      tags: [network, incus, ovn, uplink]
 
     - role: app-backend
       tags: [app, backend]

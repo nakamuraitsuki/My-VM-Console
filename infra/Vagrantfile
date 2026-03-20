@@ -88,5 +88,6 @@ Vagrant.configure("2") do |config|
   # cf. https://knowledge.sakura.ad.jp/2882/
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "site.yml"
+    ansible.tags = ENV['TAGS']
   end
 end
