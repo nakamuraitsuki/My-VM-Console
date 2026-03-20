@@ -30,4 +30,4 @@
     src: cloud.conf.j2
     dest: /etc/ssh/sshd_config.d/cloud.conf
     mode: '0644'
-  notify: Restart sshd
+  notify: Restart ssh
