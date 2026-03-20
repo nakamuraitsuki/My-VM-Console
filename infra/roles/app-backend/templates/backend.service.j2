@@ -23,8 +23,8 @@ Restart=always
 RestartSec=5
 
 # 標準出力とエラー出力をシステムログ（journald）に送る
-StandardOutput=append:{{ log_dir }}/backend.log
-StandardError=append:{{ log_dir }}/backend.log
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target

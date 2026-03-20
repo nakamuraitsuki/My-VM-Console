@@ -29,4 +29,3 @@
     state: restarted
     daemon_reload: yes
     enabled: yes
-  when: rsync_result.changed or service_file.changed
