@@ -19,7 +19,6 @@
   ansible.builtin.template:
     src: "{{ frontend_nginx_template }}"
     dest: "{{ frontend_nginx_sites_available_dir }}/{{ frontend_nginx_site_name }}"
-  notify: Reload nginx
 
 - name: Enable nginx vhost
   ansible.builtin.file:
