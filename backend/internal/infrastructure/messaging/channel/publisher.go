@@ -30,14 +30,12 @@ func (p *publisher) Publish(ctx context.Context, jobType usecase.JobType, payloa
 
 	// 全ての購読者にブロードキャスト
 	for _, ch := range channels {
-		go func(c chan []byte) {
-			log.Printf("[Publisher] sending job to subscriber: type=%s", jobType)
-			select {
-			case c <- payload:
-			case <-ctx.Done():
-				log.Printf("[Publisher] context cancelled while sending job: type=%s", jobType)
-			}
-		}(ch)
+		log.Printf("[Publisher] sending job to subscriber: type=%s", jobType)
+		select {
+		case ch <- payload:
+		case <-ctx.Done():
+			log.Printf("[Publisher] context cancelled while sending job: type=%s", jobType)
+		}
 	}
 
 	return nil
