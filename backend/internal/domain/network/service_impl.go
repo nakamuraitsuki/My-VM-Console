@@ -33,7 +33,7 @@ func (s *networkService) CalculateNextAvailableVPCCIDR(
 	}
 
 	// 10.x.0.0/16の範囲でCIDRを生成
-	for x := 0; x <= 255; x++ {
+	for x := 1; x <= 255; x++ {
 		targetCidr := netip.PrefixFrom(netip.AddrFrom4([4]byte{10, byte(x), 0, 0}), 16).String()
 
 		if _, occupied := usedMap[targetCidr]; !occupied {

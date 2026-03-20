@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"fmt"
+	"net/netip"
 
 	"example.com/m/internal/domain/network"
 	incus "github.com/lxc/incus/v6/client"
@@ -20,19 +21,23 @@ func NewDriver(c incus.InstanceServer) network.NetworkDriver {
 }
 
 func (d *driver) CreateVPC(ctx context.Context, vpc *network.VPC) error {
+	vpcName := network.IDToResourceName(string(vpc.ID()))
+
 	// VPCはIncusのProjectに対応させる
 	put := api.ProjectPut{
 		Description: fmt.Sprintf("VCP Project for %s", vpc.ID()),
 		Config: map[string]string{
-			"features.images":   "true",
-			"features.networks": "true",
-			"features.profiles": "true",
+			"features.images":             "true",
+			"features.networks":           "true",
+			"features.profiles":           "true",
+			"restricted":                  "true",
+			"restricted.networks.uplinks": fmt.Sprintf("ovn-uplink, %s", vpcName),
 		},
 	}
 
 	req := api.ProjectsPost{
 		ProjectPut: put,
-		Name:       string(vpc.ID()),
+		Name:       string(vpc.ID()), // Project name
 	}
 
 	err := d.client.CreateProject(req)
@@ -42,14 +47,21 @@ func (d *driver) CreateVPC(ctx context.Context, vpc *network.VPC) error {
 
 	// VPC専用のネットワーク生成
 	pc := d.client.UseProject(string(vpc.ID()))
+
+	prefix, err := netip.ParsePrefix(vpc.CIDR())
+	if err != nil {
+		return fmt.Errorf("invalid VPC CIDR: %w", err)
+	}
+	vpcListenAddr := fmt.Sprintf("%s/%d", prefix.Addr().Next().String(), prefix.Bits())
+
 	mainNetwork := api.NetworksPost{
-		Name: "vpc-main",
+		Name: vpcName, // Network name
 		Type: "ovn",
 		NetworkPut: api.NetworkPut{
 			Config: map[string]string{
-				"network":          "ovn-uplink",
-				"ipv4.address":     "10.0.0.1/24",
-				"ipv4.nat":         "true",
+				"network":      "ovn-uplink",
+				"ipv4.address": vpcListenAddr,
+				"ipv4.nat":     "false",
 			},
 		},
 	}
@@ -64,6 +76,16 @@ func (d *driver) CreateVPC(ctx context.Context, vpc *network.VPC) error {
 
 func (d *driver) CreateSubnet(ctx context.Context, vpcID network.VPCID, subnet *network.Subnet) error {
 	bridgeName := network.IDToResourceName(string(subnet.ID()))
+	vpcName := network.IDToResourceName(string(vpcID))
+
+	// NOTE: subnet は ネットワークアドレスが渡されるので、Gateway設定は+1してあててあげる
+	prefix, err := netip.ParsePrefix(subnet.CIDR())
+	if err != nil {
+		return fmt.Errorf("invalid subnet CIDR: %w", err)
+	}
+	// Incusの ipv4.address は「そのネットワーク内でIncus自身が持つIP」を期待するため
+	gatewayAddr := prefix.Addr().Next()
+	listenAddr := fmt.Sprintf("%s/%d", gatewayAddr.String(), prefix.Bits())
 
 	// project でVPCを表現
 	pc := d.client.UseProject(string(vpcID))
@@ -73,17 +95,37 @@ func (d *driver) CreateSubnet(ctx context.Context, vpcID network.VPCID, subnet *
 		Type: "ovn",
 		NetworkPut: api.NetworkPut{
 			Config: map[string]string{
-				"network":      "vpc-main",
-				"ipv4.address": subnet.CIDR(),
-				"ipv4.nat":     "true",
-				"ipv4.dhcp":    "true",
+				"ipv4.address":     listenAddr,
+				"ipv4.nat":         "false",
+				"ipv4.dhcp":        "true",
+				"ipv4.dhcp.ranges": "", // IP割り振りはすべてGoアプリ側で行うが、その他の情報はほしい
 			},
 		},
 	}
-	err := pc.CreateNetwork(req)
+	err = pc.CreateNetwork(req)
 	if err != nil {
 		return err
 	}
+
+	// 双方向の Peering を設定
+	err = pc.CreateNetworkPeer(bridgeName, api.NetworkPeersPost{
+		Name:          "to-vpc-hub",
+		TargetProject: string(vpcID),
+		TargetNetwork: vpcName,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = pc.CreateNetworkPeer(vpcName, api.NetworkPeersPost{
+		Name:          "to-" + bridgeName,
+		TargetProject: string(vpcID),
+		TargetNetwork: bridgeName,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

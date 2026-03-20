@@ -14,6 +14,7 @@
       --type=physical
       parent={{ ovn_uplink_nic }}
       ipv4.gateway={{ ovn_uplink_ip }}
+      ipv4.routes={{ vpc_global_route }}
       ipv4.ovn.ranges={{ incus_ovn_external_range }}
   when: bridge_check.rc != 0
 
