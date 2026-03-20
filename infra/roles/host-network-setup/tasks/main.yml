@@ -9,16 +9,11 @@
   changed_when: "'already exists' not in create_dummy_result.stderr"
   tags: [network, host]
 
-# iface に IP を割り当てる(GW として機能させるため)
-- name: Assign IP to dummy interface 
-  become: true
-  ansible.builtin.shell: |
-    ip addr add {{ ovn_uplink_ip }} dev {{ ovn_uplink_nic }} || true
-  register: assign_ip_result
-  changed_when: "'already exists' not in assign_ip_result.stderr"
-  tags: [network, host]
+# NOTE: physical NIC を uplink にする場合、OVNに全権限を委ねるためにIPアドレスは振ってはいけない
+#       よって、IP設定を意図的にしていない
 
-  # VPC全体の帯域へのスタティックルートを追加
+# VPC全体の帯域へのスタティックルートを追加
+# 先述の理由から、ルート解決は NIC に向けて直接つなげる
 - name: Add Static Route for VPC network range
   become: true
   ansible.builtin.shell: |

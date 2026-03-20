@@ -48,7 +48,6 @@ func (d *driver) CreateVPC(ctx context.Context, vpc *network.VPC) error {
 		NetworkPut: api.NetworkPut{
 			Config: map[string]string{
 				"network":          "ovn-uplink",
-				"ovn.ingress_mode": "routed",
 				"ipv4.address":     "10.0.0.1/24",
 				"ipv4.nat":         "true",
 			},
