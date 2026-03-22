@@ -37,7 +37,7 @@ func (i *executeStopInstanceInteractor) Execute(ctx context.Context, payload Sto
 		return err
 	}
 
-	if err := i.driver.Stop(ctx, payload.InstanceID); err != nil {
+	if err := i.driver.Stop(ctx, inst); err != nil {
 		inst.MarkAsError(compute.ErrInStopping)
 		_ = i.instanceRepo.Save(ctx, inst)
 		return err

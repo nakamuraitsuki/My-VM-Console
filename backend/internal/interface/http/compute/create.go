@@ -45,7 +45,7 @@ func (h *Handler) CreateInstance(c echo.Context) error {
 		Memory:   req.Memory,
 	})
 	if err != nil {
-		return echo.NewHTTPError(500, "インスタンスの作成に失敗しました")
+		return echo.NewHTTPError(500, "インスタンスの作成に失敗しました: "+err.Error())
 	}
 
 	return c.JSON(200, CreateResp{

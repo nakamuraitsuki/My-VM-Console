@@ -56,6 +56,7 @@ type Instance struct {
 	imageID image.ImageID
 
 	// Network
+	vpcID     network.VPCID
 	subenetID network.SubnetID
 	privateIP string
 
@@ -72,6 +73,7 @@ func NewInstance(
 	errorPhase *ErrPhase,
 	cpu, memoryMB int,
 	imageID image.ImageID,
+	vpcID network.VPCID,
 	subnetID network.SubnetID,
 	privateIP string,
 	rootVolumeID storage.VolumeID,
@@ -85,6 +87,7 @@ func NewInstance(
 		cpu:          cpu,
 		memoryMB:     memoryMB,
 		imageID:      imageID,
+		vpcID:        vpcID,
 		subenetID:    subnetID,
 		privateIP:    privateIP,
 		rootVolumeID: rootVolumeID,
@@ -92,7 +95,7 @@ func NewInstance(
 }
 
 func NewID() InstanceID {
-	return InstanceID("inst-"+uuid.New().String())
+	return InstanceID("inst-" + uuid.New().String())
 }
 
 // --- Getters ---
@@ -101,6 +104,7 @@ func (i *Instance) Name() string                   { return i.name }
 func (i *Instance) OwnerID() user.UserID           { return i.ownerID }
 func (i *Instance) Status() InstanceStatus         { return i.status }
 func (i *Instance) ImageID() image.ImageID         { return i.imageID }
+func (i *Instance) VPCID() network.VPCID           { return i.vpcID }
 func (i *Instance) SubnetID() network.SubnetID     { return i.subenetID }
 func (i *Instance) PrivateIP() string              { return i.privateIP }
 func (i *Instance) RootVolumeID() storage.VolumeID { return i.rootVolumeID }

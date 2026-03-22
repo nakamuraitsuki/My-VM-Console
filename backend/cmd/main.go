@@ -29,6 +29,7 @@ import (
 	userH "example.com/m/internal/interface/http/user"
 	"example.com/m/internal/usecase"
 	computeUC "example.com/m/internal/usecase/compute"
+	imageUC "example.com/m/internal/usecase/image"
 	networkUC "example.com/m/internal/usecase/network"
 	userUC "example.com/m/internal/usecase/user"
 )
@@ -82,7 +83,7 @@ func main() {
 	provisioningNetUC := networkUC.NewProvisioningNetworkInteractor(userRepo, netRepo, netCalcuSvc, identitySvc, netDriver, uow)
 	reqCreateUC := computeUC.NewRequestCreateInstanceInteractor(userRepo, instRepo, netRepo, ingressRepo, volRepo, netCalcuSvc, publisher, uow)
 	execCreateUC := computeUC.NewExecuteCreateInstanceInteractor(instRepo ,netRepo, volRepo, ingressRepo, imgRepo, instDriver, volDriver, ingressDriver, uow)
-
+	seedImageUC := imageUC.NewSeedImageUseCase(imgRepo)
 	// handler
 	userHandler := userH.NewHandler(oidcCfg, *oidcVerifier, ensureUserUC, listMyInstanceUC)
 	computeHandler := computeH.NewHandler(reqCreateUC, ensureUserUC)
@@ -94,5 +95,12 @@ func main() {
 	usecase.Bind(ctx, subscriber, usecase.JobTypeCreateInstance, execCreateUC.Execute)
 	// router
 	e := httpAdapter.InitRoutes(userHandler, computeHandler)
+
+	// seed data
+	if err := seedImageUC.Execute(context.Background()); err != nil {
+		panic("Failed to seed images: " + err.Error())
+	}
+
+	// start server
 	e.Start(":8080")
 }

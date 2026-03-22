@@ -80,11 +80,13 @@ CREATE TABLE IF NOT EXISTS instances (
 	cpu INTEGER NOT NULL CHECK (cpu > 0),
 	memory_mb INTEGER NOT NULL CHECK (memory_mb > 0),
 	image_id TEXT NOT NULL,
+	vpc_id TEXT NOT NULL,
 	subnet_id TEXT NOT NULL,
 	private_ip TEXT NOT NULL,
 	root_volume_id TEXT NOT NULL UNIQUE,
 	FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
 	FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE RESTRICT,
+	FOREIGN KEY (vpc_id) REFERENCES vpcs(id) ON DELETE RESTRICT,
 	FOREIGN KEY (subnet_id) REFERENCES subnets(id) ON DELETE RESTRICT,
 	FOREIGN KEY (root_volume_id) REFERENCES volumes(id) ON DELETE RESTRICT
 );

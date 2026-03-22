@@ -24,6 +24,7 @@ func NewDriver(c incus.InstanceServer) compute.ComputeDriver {
 func (d *driver) Create(ctx context.Context, inst *compute.Instance, img *image.Image) error {
 	// 共通ルール
 	bridgeName := network.IDToResourceName(string(inst.SubnetID()))
+	vpcClient := d.client.UseProject(string(inst.VPCID())) 
 
 	// instance put
 	put := api.InstancePut{
@@ -36,8 +37,8 @@ func (d *driver) Create(ctx context.Context, inst *compute.Instance, img *image.
 		Devices: map[string]map[string]string{
 			"eth0": {
 				"type":         "nic",
-				"nictype":      "bridged",
-				"parent":       bridgeName,
+				"nictype":      "ovn",
+				"network":      bridgeName,
 				"name":         "eth0",
 				"ipv4.address": inst.PrivateIP(),
 			},
@@ -45,7 +46,7 @@ func (d *driver) Create(ctx context.Context, inst *compute.Instance, img *image.
 				"type": "disk",
 				"path": "/",
 				"pool": "default",
-				"source": string(inst.RootVolumeID()), // 事前に作成しておいたVolumeを指定
+				// "source": string(inst.RootVolumeID()), // Volumeは自動解決されるので、競合を防ぎたい
 			},
 		},
 	}
@@ -57,13 +58,14 @@ func (d *driver) Create(ctx context.Context, inst *compute.Instance, img *image.
 		Source: api.InstanceSource{
 			Type:        "image",
 			Fingerprint: img.Fingerprint(),
+			Alias:       img.Alias(),
 			Server:      img.ServerURL(), // 例: "https://images.linuxcontainers.org"
 			Protocol:    img.Protocol(),  // 例: "simplestreams"
 			Mode:        "pull",
 		},
 	}
 
-	op, err := d.client.CreateInstance(post)
+	op, err := vpcClient.CreateInstance(post)
 	if err != nil {
 		return fmt.Errorf("failed to create instance: %w", err)
 	}
@@ -75,13 +77,14 @@ func (d *driver) Create(ctx context.Context, inst *compute.Instance, img *image.
 	return nil
 }
 
-func (d *driver) Start(ctx context.Context, id compute.InstanceID) error {
+func (d *driver) Start(ctx context.Context, inst *compute.Instance) error {
+	vpcClient := d.client.UseProject(string(inst.VPCID()))
 	req := api.InstanceStatePut{
 		Action:  "start",
 		Timeout: -1, // 起動完了まで待機
 	}
 
-	op, err := d.client.UpdateInstanceState(string(id), req, "")
+	op, err := vpcClient.UpdateInstanceState(string(inst.ID()), req, "")
 	if err != nil {
 		return fmt.Errorf("failed to start instance: %w", err)
 	}
@@ -92,14 +95,15 @@ func (d *driver) Start(ctx context.Context, id compute.InstanceID) error {
 	return nil
 }
 
-func (d *driver) Stop(ctx context.Context, id compute.InstanceID) error {
+func (d *driver) Stop(ctx context.Context, inst *compute.Instance) error {
+	vpcClient := d.client.UseProject(string(inst.VPCID()))
 	req := api.InstanceStatePut{
 		Action:  "stop",
 		Timeout: 30, // 30秒の猶予を持ってクリーンシャットダウンを試みる
 		Force:   false,
 	}
 
-	op, err := d.client.UpdateInstanceState(string(id), req, "")
+	op, err := vpcClient.UpdateInstanceState(string(inst.ID()), req, "")
 	if err != nil {
 		return fmt.Errorf("failed to stop instance: %w", err)
 	}
@@ -111,8 +115,9 @@ func (d *driver) Stop(ctx context.Context, id compute.InstanceID) error {
 }
 
 // NOTE: usecaseなどの層で、停止状態を保証する
-func (d *driver) Terminate(ctx context.Context, id compute.InstanceID) error {
-	op, err := d.client.DeleteInstance(string(id))
+func (d *driver) Terminate(ctx context.Context, inst *compute.Instance) error {
+	vpcClient := d.client.UseProject(string(inst.VPCID()))
+	op, err := vpcClient.DeleteInstance(string(inst.ID()))
 	if err != nil {
 		return fmt.Errorf("failed to delete instance: %w", err)
 	}
@@ -124,8 +129,9 @@ func (d *driver) Terminate(ctx context.Context, id compute.InstanceID) error {
 }
 
 // 本当にわけがわからなくなったときのリカバリ用。物理とDBの整合性を取りに行く
-func (d *driver) GetRealStatus(ctx context.Context, id compute.InstanceID) (compute.InstanceStatus, error) {
-	state, _, err := d.client.GetInstanceState(string(id))
+func (d *driver) GetRealStatus(ctx context.Context, inst *compute.Instance) (compute.InstanceStatus, error) {
+	vpcClient := d.client.UseProject(string(inst.VPCID()))
+	state, _, err := vpcClient.GetInstanceState(string(inst.ID()))
 	if err != nil {
 		return compute.StatusError, fmt.Errorf("failed to get instance state: %w", err)
 	}

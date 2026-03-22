@@ -22,6 +22,7 @@ type instanceModel struct {
 	CPU          int     `db:"cpu"`
 	MemoryMB     int     `db:"memory_mb"`
 	ImageID      string  `db:"image_id"`
+	VPCID        string  `db:"vpc_id"`
 	SubnetID     string  `db:"subnet_id"`
 	PrivateIP    string  `db:"private_ip"`
 	RootVolumeID string  `db:"root_volume_id"`
@@ -49,6 +50,7 @@ func (r *repository) Save(ctx context.Context, inst *compute.Instance) error {
 		SubnetID:     string(inst.SubnetID()),
 		PrivateIP:    inst.PrivateIP(),
 		RootVolumeID: string(inst.RootVolumeID()),
+		VPCID:        string(inst.VPCID()),
 	}
 
 	if inst.ErrPhase() != nil {
@@ -59,15 +61,16 @@ func (r *repository) Save(ctx context.Context, inst *compute.Instance) error {
 	const query = `
 INSERT INTO instances (
 	id, name, owner_id, status, error_phase,
-	cpu, memory_mb, image_id, subnet_id, private_ip, root_volume_id
+	cpu, memory_mb, image_id, subnet_id, private_ip, root_volume_id, vpc_id
 ) VALUES (
 	:id, :name, :owner_id, :status, :error_phase, 
-  :cpu, :memory_mb, :image_id, :subnet_id, :private_ip, :root_volume_id
+  :cpu, :memory_mb, :image_id, :subnet_id, :private_ip, :root_volume_id, :vpc_id
 ) ON CONFLICT(id) DO UPDATE SET
 	status = :status,
 	error_phase = :error_phase,
 	private_ip = :private_ip,
-	root_volume_id = :root_volume_id
+	root_volume_id = :root_volume_id,
+	vpc_id = :vpc_id
 `
 	_, err := sqlx.NamedExecContext(ctx, db, query, model)
 	return err
@@ -117,6 +120,7 @@ func (r *repository) toEntity(m *instanceModel) *compute.Instance {
 		m.CPU,
 		m.MemoryMB,
 		image.ImageID(m.ImageID),
+		network.VPCID(m.VPCID),
 		network.SubnetID(m.SubnetID),
 		m.PrivateIP,
 		storage.VolumeID(m.RootVolumeID),

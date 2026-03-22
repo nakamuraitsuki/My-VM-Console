@@ -96,7 +96,7 @@ func (i *executeDeleteInstanceInteractor) Execute(ctx context.Context, payload D
 		}
 	}
 
-	if err := i.instanceDriver.Terminate(ctx, inst.ID()); err != nil {
+	if err := i.instanceDriver.Terminate(ctx, inst); err != nil {
 		inst.MarkAsError(compute.ErrInDeleting)
 		_ = i.instanceRepo.Save(ctx, inst)
 		return err

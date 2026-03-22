@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 
 	"example.com/m/internal/domain/compute"
 	"example.com/m/internal/domain/gateway"
@@ -72,25 +73,36 @@ func (i *requestCreateInstanceInteractor) Execute(
 	ctx context.Context,
 	req RequestCreateInstanceInput,
 ) (*RequestCreateInstanceOutput, error) {
+	log.Printf("[RequestCreateInstance] start name=%s vpc=%s subnet=%v cpu=%d memory=%d", req.Name, req.VPCID, req.SubnetID, req.CPU, req.Memory)
+
 	// check user permissions
 	usr, ok := user.FromContext(ctx)
 	if !ok {
+		log.Printf("[RequestCreateInstance] failed: user not found in context")
 		return nil, user.ErrUserNotInContext
 	}
+	log.Printf("[RequestCreateInstance] user resolved userID=%s", usr.ID())
 
 	if !usr.HasPermission(user.PermissionInstanceCreate) {
+		log.Printf("[RequestCreateInstance] failed: no permission userID=%s", usr.ID())
 		return nil, user.ErrNoPermission
 	}
+	log.Printf("[RequestCreateInstance] permission check passed userID=%s", usr.ID())
 
 	ownedInstances, err := i.instanceRepo.FindByOwnerID(ctx, usr.ID())
 	if err != nil {
+		log.Printf("[RequestCreateInstance] failed: FindByOwnerID userID=%s err=%v", usr.ID(), err)
 		return nil, err
 	}
+	log.Printf("[RequestCreateInstance] owner instances loaded count=%d", len(ownedInstances))
 	if !usr.CanAllocateInstance(len(ownedInstances), req.CPU) {
+		log.Printf("[RequestCreateInstance] failed: quota exceeded userID=%s current=%d requestedCPU=%d", usr.ID(), len(ownedInstances), req.CPU)
 		return nil, user.ErrQuotaExceeded
 	}
+	log.Printf("[RequestCreateInstance] quota check passed")
 
 	var instanceID compute.InstanceID
+	log.Printf("[RequestCreateInstance] starting unit of work")
 	uowErr := i.uow.Do(ctx, func(ctx context.Context) error {
 		// インスタンスを置くサブネットを取得する
 		// ついでにIPアドレスも確保する
@@ -98,31 +110,46 @@ func (i *requestCreateInstanceInteractor) Execute(
 		var IPAddress string
 		var err error
 		if req.SubnetID != nil {
+			log.Printf("[RequestCreateInstance] subnet selection: explicit subnet=%s", *req.SubnetID)
 			targetSubnet, err = i.networkRepo.FindSubnetByID(ctx, *req.SubnetID)
 			if err != nil {
+				log.Printf("[RequestCreateInstance] failed: FindSubnetByID subnet=%s err=%v", *req.SubnetID, err)
 				return err
 			}
 			leases, err := i.networkRepo.FindLeasesBySubnetID(ctx, targetSubnet.ID())
 			if err != nil {
+				log.Printf("[RequestCreateInstance] failed: FindLeasesBySubnetID subnet=%s err=%v", targetSubnet.ID(), err)
 				return err
 			}
+			log.Printf("[RequestCreateInstance] leases loaded subnet=%s count=%d", targetSubnet.ID(), len(leases))
 			usedIPs := make([]string, len(leases))
 			for i, lease := range leases {
 				usedIPs[i] = lease.IPAddress
 			}
 			IPAddress, err = i.networkService.CalculateNextAvailableIP(ctx, targetSubnet.CIDR(), usedIPs)
+			if err != nil {
+				log.Printf("[RequestCreateInstance] failed: CalculateNextAvailableIP subnet=%s err=%v", targetSubnet.ID(), err)
+				return err
+			}
+			log.Printf("[RequestCreateInstance] ip selected subnet=%s ip=%s", targetSubnet.ID(), IPAddress)
 		} else {
+			log.Printf("[RequestCreateInstance] subnet selection: auto by vpc=%s", req.VPCID)
 			subnets, err := i.networkRepo.FindSubnetsByVPCID(ctx, req.VPCID)
 			if err != nil || len(subnets) == 0 {
+				log.Printf("[RequestCreateInstance] failed: FindSubnetsByVPCID vpc=%s count=%d err=%v", req.VPCID, len(subnets), err)
 				return errors.New("no subnets available in the specified VPC")
 			}
+			log.Printf("[RequestCreateInstance] subnets loaded vpc=%s count=%d", req.VPCID, len(subnets))
 
 			var availableIP string
 			for _, subnet := range subnets {
+				log.Printf("[RequestCreateInstance] try subnet=%s cidr=%s", subnet.ID(), subnet.CIDR())
 				leases, err := i.networkRepo.FindLeasesBySubnetID(ctx, subnet.ID())
 				if err != nil {
+					log.Printf("[RequestCreateInstance] failed: FindLeasesBySubnetID subnet=%s err=%v", subnet.ID(), err)
 					return err
 				}
+				log.Printf("[RequestCreateInstance] leases loaded subnet=%s count=%d", subnet.ID(), len(leases))
 				usedIPs := make([]string, len(leases))
 				for i, lease := range leases {
 					usedIPs[i] = lease.IPAddress
@@ -131,30 +158,38 @@ func (i *requestCreateInstanceInteractor) Execute(
 				if err == nil {
 					targetSubnet = subnet
 					IPAddress = availableIP
+					log.Printf("[RequestCreateInstance] ip selected subnet=%s ip=%s", subnet.ID(), IPAddress)
 					break
 				}
 				// 「空きがない」以外のエラーは即座に返す
 				if !errors.Is(err, network.ErrNoAvailableIPs) {
+					log.Printf("[RequestCreateInstance] failed: CalculateNextAvailableIP subnet=%s err=%v", subnet.ID(), err)
 					return err
 				}
+				log.Printf("[RequestCreateInstance] subnet exhausted subnet=%s", subnet.ID())
 				// サブネットに利用可能なIPがない場合は次のサブネットを試す
 			}
 		}
 
 		// サブネットが見つからない場合はエラー
 		if targetSubnet == nil || IPAddress == "" {
+			log.Printf("[RequestCreateInstance] failed: no subnet/ip available")
 			return errors.New("no available subnets with free IP addresses")
 		}
 
 		instanceID = compute.NewID()
+		log.Printf("[RequestCreateInstance] generated instance id=%s", instanceID)
 		lease := network.NewLease(
 			targetSubnet.ID(),
 			string(instanceID),
 			IPAddress,
 		)
+		log.Printf("[Request CreateInstance] Reserving IP %s for instance %s in subnet %s", IPAddress, instanceID, targetSubnet.ID())
 		if err := i.networkRepo.CreateLease(ctx, lease); err != nil {
+			log.Printf("[RequestCreateInstance] failed: CreateLease subnet=%s ip=%s err=%v", targetSubnet.ID(), IPAddress, err)
 			return err
 		}
+		log.Printf("[RequestCreateInstance] lease created subnet=%s ip=%s", targetSubnet.ID(), IPAddress)
 
 		// volume 予約
 		volumeID := storage.NewID()
@@ -167,8 +202,10 @@ func (i *requestCreateInstanceInteractor) Execute(
 			string(usr.ID()), // とりあえずユーザーの持ち物にしておく
 		)
 		if err := i.storageRepo.Save(ctx, volume); err != nil {
+			log.Printf("[RequestCreateInstance] failed: Save volume volumeID=%s err=%v", volumeID, err)
 			return err
 		}
+		log.Printf("[RequestCreateInstance] volume saved volumeID=%s", volumeID)
 
 		// Save Entity
 		inst := compute.NewInstance(
@@ -180,14 +217,17 @@ func (i *requestCreateInstanceInteractor) Execute(
 			req.CPU,
 			req.Memory,
 			req.ImageID,
+			req.VPCID,
 			targetSubnet.ID(),
 			IPAddress,
 			volume.ID(),
 		)
 
 		if err := i.instanceRepo.Save(ctx, inst); err != nil {
+			log.Printf("[RequestCreateInstance] failed: Save instance instance=%v err=%v", inst, err)
 			return err
 		}
+		log.Printf("[RequestCreateInstance] instance saved instanceID=%s", instanceID)
 
 		// インスタンスを外部に公開する
 		ingressID := gateway.NewID()
@@ -203,14 +243,18 @@ func (i *requestCreateInstanceInteractor) Execute(
 			instanceID,
 		)
 		if err := i.gatewayRepo.Save(ctx, ingressRoute); err != nil {
+			log.Printf("[RequestCreateInstance] failed: Save ingress route ingressID=%s instanceID=%s err=%v", ingressID, instanceID, err)
 			return err
 		}
+		log.Printf("[RequestCreateInstance] ingress route saved ingressID=%s instanceID=%s", ingressID, instanceID)
 
 		return nil
 	})
 	if uowErr != nil {
+		log.Printf("[RequestCreateInstance] failed: uow err=%v", uowErr)
 		return nil, uowErr
 	}
+	log.Printf("[RequestCreateInstance] uow committed instanceID=%s", instanceID)
 
 	// ジョブの発行
 	payload := CreateInstancePayload{
@@ -218,25 +262,34 @@ func (i *requestCreateInstanceInteractor) Execute(
 	}
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
+		log.Printf("[RequestCreateInstance] failed: marshal payload instanceID=%s err=%v", instanceID, err)
 		return nil, err
 	}
+	log.Printf("[RequestCreateInstance] job payload marshaled instanceID=%s", instanceID)
 	if err := i.publisher.Publish(ctx, usecase.JobTypeCreateInstance, payloadBytes); err != nil {
+		log.Printf("[RequestCreateInstance] failed: publish job instanceID=%s err=%v", instanceID, err)
 		inst, err := i.instanceRepo.FindByID(ctx, instanceID)
 		if err != nil {
+			log.Printf("[RequestCreateInstance] failed: FindByID after publish failure instanceID=%s err=%v", instanceID, err)
 			return nil, err
 		}
 		inst.MarkAsError(compute.ErrInPending)
 		if saveErr := i.instanceRepo.Save(ctx, inst); saveErr != nil {
+			log.Printf("[RequestCreateInstance] failed: Save error state instanceID=%s err=%v", instanceID, saveErr)
 			return nil, saveErr
 		}
+		log.Printf("[RequestCreateInstance] marked instance error state instanceID=%s", instanceID)
 		_ = i.instanceRepo.Save(ctx, inst) // エラー状態を保存
 		return nil, err
 	}
+	log.Printf("[RequestCreateInstance] job published instanceID=%s", instanceID)
 
 	createdInstance, err := i.instanceRepo.FindByID(ctx, instanceID)
 	if err != nil {
+		log.Printf("[RequestCreateInstance] failed: FindByID final instanceID=%s err=%v", instanceID, err)
 		return nil, err
 	}
+	log.Printf("[RequestCreateInstance] completed instanceID=%s status=%s subnet=%s ip=%s", createdInstance.ID(), createdInstance.Status(), createdInstance.SubnetID(), createdInstance.PrivateIP())
 	return &RequestCreateInstanceOutput{
 		InstanceID: createdInstance.ID(),
 		Name:       createdInstance.Name(),
