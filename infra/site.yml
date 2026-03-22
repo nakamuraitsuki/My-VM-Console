@@ -18,6 +18,8 @@
       tags: [ssh]
 
     # 必要なソフトウェアのインストール
+    - role: zfs-setup
+      tags: [zfs]
     - role: ovn-setup
       tags: [ovn]
     - role: incus-setup
