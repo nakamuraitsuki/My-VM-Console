@@ -1,0 +1,15 @@
+config:
+  network.ovn.northbound_connection: unix:/run/ovn/ovnnb_db.sock
+storage_pools:
+- name: default
+  driver: zfs
+  config:
+    size: {{ incus_storage_size | default('20GiB') }}
+# Networkについては後でuplink(physical)が登場するので、設定をしない
+profiles:
+- name: default
+  devices:
+    root:
+      path: /
+      pool: default
+      type: disk

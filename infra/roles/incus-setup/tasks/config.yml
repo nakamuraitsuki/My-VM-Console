@@ -1,8 +1,21 @@
 ---
-- name: Initialize Incus with default settings
+- name: Setup Incus preseed file
+  ansible.builtin.template:
+    src: incus-preseed.yml.j2
+    dest: /tmp/incus-preseed.yml
+    mode: '0644'
+
+- name: Initialize Incus with preseed file
   ansible.builtin.shell:
-    cmd: incus admin init --auto
-    creates: /var/lib/incus/unix.socket
+    # すでに初期化されている場合はスキップするか、チェックを入れる
+    cmd: cat /tmp/incus-preseed.yml | incus admin init --preseed
+  become: true
+  # 一度成功したら二度目は実行しないようにするためのガード（例: storage listの確認）
+  register: init_result
+  changed_when: "'already exists' not in init_result.stderr"
+  failed_when: 
+    - init_result.rc != 0
+    - "'already exists' not in init_result.stderr"
 
 - name: Link Incus to OVN Northbound DB
   ansible.builtin.command:
