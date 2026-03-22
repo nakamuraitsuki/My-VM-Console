@@ -1,0 +1,15 @@
+---
+- name: Install ZFS userland tools
+  ansible.builtin.apt:
+    name: zfsutils-linux
+    state: present
+    update_cache: yes
+
+- name: Ensure ZFS kernel module is loaded
+  community.general.modprobe:
+    name: zfs
+    state: present
+
+- name: Verify ZFS availability
+  ansible.builtin.command: zfs --version
+  changed_when: false
