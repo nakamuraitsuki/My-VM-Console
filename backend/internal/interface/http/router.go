@@ -2,6 +2,7 @@ package http
 
 import (
 	"example.com/m/internal/infrastructure/env"
+	"example.com/m/internal/interface/http/access"
 	"example.com/m/internal/interface/http/compute"
 	"example.com/m/internal/interface/http/user"
 	"github.com/gorilla/sessions"
@@ -12,6 +13,7 @@ import (
 func InitRoutes(
 	userHandler *user.Handler,
 	computeHandler *compute.Handler,
+	sshCaHandler *access.Handler,
 ) *echo.Echo {
 	e := echo.New()
 
@@ -26,7 +28,6 @@ func InitRoutes(
 	}
 	e.Use(session.Middleware(store))
 
-
 	// ユーザ関連のルートを登録
 	userGroup := e.Group("api/users")
 	userHandler.RegisterRoutes(userGroup)
@@ -34,6 +35,10 @@ func InitRoutes(
 	// コンピュート関連のルートを登録
 	computeGroup := e.Group("api/computes")
 	computeHandler.RegisterRoutes(computeGroup)
+
+	// SSH CA関連のルートを登録
+	sshCaGroup := e.Group("api/ssh-ca")
+	sshCaHandler.RegisterRoutes(sshCaGroup)
 
 	return e
 }

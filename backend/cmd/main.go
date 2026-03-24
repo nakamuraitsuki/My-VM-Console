@@ -15,6 +15,7 @@ import (
 	computeDriverInfra "example.com/m/internal/infrastructure/driver/incus/compute"
 	networkDriverInfra "example.com/m/internal/infrastructure/driver/incus/network"
 	storageDriverInfra "example.com/m/internal/infrastructure/driver/incus/storage"
+	"example.com/m/internal/infrastructure/driver/sshca"
 	"example.com/m/internal/infrastructure/env"
 	"example.com/m/internal/infrastructure/messaging/channel"
 	"example.com/m/internal/infrastructure/persistence/sqlite"
@@ -25,6 +26,7 @@ import (
 	storageRepoInfra "example.com/m/internal/infrastructure/persistence/sqlite/storage"
 	userRepoInfra "example.com/m/internal/infrastructure/persistence/sqlite/user"
 	httpAdapter "example.com/m/internal/interface/http"
+	"example.com/m/internal/interface/http/access"
 	computeH "example.com/m/internal/interface/http/compute"
 	userH "example.com/m/internal/interface/http/user"
 	"example.com/m/internal/usecase"
@@ -84,9 +86,15 @@ func main() {
 	reqCreateUC := computeUC.NewRequestCreateInstanceInteractor(userRepo, instRepo, netRepo, ingressRepo, volRepo, netCalcuSvc, publisher, uow)
 	execCreateUC := computeUC.NewExecuteCreateInstanceInteractor(instRepo ,netRepo, volRepo, ingressRepo, imgRepo, instDriver, volDriver, ingressDriver, uow)
 	seedImageUC := imageUC.NewSeedImageUseCase(imgRepo)
+
+	// Signer
+	sshcaCfg := sshca.NewConfig()
+	signer := sshca.NewSigner(sshcaCfg)
+
 	// handler
 	userHandler := userH.NewHandler(oidcCfg, *oidcVerifier, ensureUserUC, listMyInstanceUC)
 	computeHandler := computeH.NewHandler(reqCreateUC, ensureUserUC)
+	sshCaHandler := access.NewHandler(signer)
 
 	// bind job handlers
 	ctx, cancel := context.WithCancel(context.Background())
@@ -94,7 +102,7 @@ func main() {
 	usecase.Bind(ctx, subscriber, usecase.JobTypeCreateVPCAndDefaultSubnet, provisioningNetUC.Execute)
 	usecase.Bind(ctx, subscriber, usecase.JobTypeCreateInstance, execCreateUC.Execute)
 	// router
-	e := httpAdapter.InitRoutes(userHandler, computeHandler)
+	e := httpAdapter.InitRoutes(userHandler, computeHandler, sshCaHandler)
 
 	// seed data
 	if err := seedImageUC.Execute(context.Background()); err != nil {
