@@ -8,13 +8,13 @@
 - name: Download and unarchive etcd
   ansible.builtin.unarchive:
     src: "{{ etcd_download_url }}"
-    dest: "/tmp"
+    dest: "{{ etcd_tmp_dir }}"
     remote_src: yes
-    creates: "/tmp/etcd-{{ etcd_version }}-linux-amd64/etcd"
+    creates: "{{ etcd_tmp_dir }}/etcd"
 
 - name: Copy etcd binaries to install directory
   ansible.builtin.copy:
-    src: "/tmp/etcd-{{ etcd_version }}-linux-amd64/etcd"
+    src: "{{ etcd_tmp_dir }}/etcd"
     dest: "{{ etcd_install_dir }}/{{ item }}"
     mode: '0755'
     remote_src: yes
