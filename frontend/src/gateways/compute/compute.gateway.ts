@@ -10,11 +10,19 @@ import {
 } from '../../domain/compute/compute.model';
 
 /**
- * API レスポンスの型（キャメルケース）
+ * DTO（キャメルケース）
  * Snake -> Camel 変換は、API Clientで済ませておく
  */
 interface CreateInstanceApiResponse {
   instanceId: string;
+  name: string;
+  status: string;
+  subnetId: string;
+  privateIp: string;
+}
+// Frontend の Domain はIDなどに厳密なガードがかかっているので、中間体が必要
+interface ListMineResponseItem {
+  id: string;
   name: string;
   status: string;
   subnetId: string;
@@ -51,6 +59,23 @@ export class ComputeGateway implements IComputeRepository {
       return success(instance);
     } catch (error) {
       console.error('Failed to create instance:', error);
+      return failure(this.mapError(error));
+    }
+  }
+
+  async listMine(): Promise<Result<Instance[], ComputeError>> {
+    try {
+      const response = await apiClient.get<ListMineResponseItem[]>('/api/users/me/instances');
+      const instances = response.data.map((data) => ({
+        id: createInstanceID(data.id),
+        name: data.name,
+        status: data.status as InstanceStatus,
+        subnetId: createSubnetID(data.subnetId),
+        privateIp: data.privateIp,
+      }));
+      return success(instances);
+    } catch (error) {
+      console.error('Failed to list instances:', error);
       return failure(this.mapError(error));
     }
   }

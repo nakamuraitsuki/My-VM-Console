@@ -10,9 +10,6 @@ export type ComputeError =
   | 'SERVER_ERROR'
   | 'UNKNOWN_ERROR';
 
-/**
- * インスタンス作成のリクエストモデル
- */
 export interface CreateInstanceRequest {
   name: string;
   imageId: ImageID;
@@ -22,12 +19,13 @@ export interface CreateInstanceRequest {
   memory: number;
 }
 
-/**
- * コンピュートリソースのリポジトリインターフェース
- */
 export interface IComputeRepository {
   /**
    * インスタンスを作成します
    */
   createInstance(request: CreateInstanceRequest): Promise<Result<Instance, ComputeError>>;
+  /**
+   * インスタンス列挙
+   */
+  listMine(): Promise<Result<Instance[], ComputeError>>;
 }
