@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { requestCreateInstance } from '../../../application/compute/compute.usecase';
-import type { Instance } from '../../../domain/compute/compute.model';
-import type { ComputeError, CreateInstanceRequest } from '../../../domain/compute/compute.repository';
-import { useServices } from '../../../context/ServiceContext';
+import { requestCreateInstance } from '@/application/compute/create.usecase';
+import type { Instance } from '@/domain/compute/compute.model';
+import type { ComputeError, CreateInstanceRequest } from '@/domain/compute/compute.repository';
+import { useServices } from '@/context/ServiceContext';
 
 interface UseCreateInstanceState {
   isLoading: boolean;

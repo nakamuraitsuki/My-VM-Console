@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { IconButton } from '../../../ui/IconButton/IconButton';
+import { IconButton } from '../../../../ui/IconButton/IconButton';
 import { useCreateInstance } from '../hooks/useCreateInstance';
-import { createImageID, createVPCID } from '../../../domain/compute/compute.model';
+import { createImageID } from '../../../../domain/compute/compute.model';
 import styles from './CreateInstanceButton.module.css';
 import type { CreateInstanceRequest } from '@/domain/compute/compute.repository';
 
@@ -29,7 +29,7 @@ export const CreateInstanceButton = ({
     const request: CreateInstanceRequest = {
       name: `instance-${Date.now()}`,
       imageId: createImageID('img-ubuntu-2404'),
-      vpcId: createVPCID('vpc-250eda13-ef6c-4121-9234-c834618c06f4'),
+      vpcId: undefined,
       subnetId: undefined,
       cpu: 2,
       memory: 2048,
