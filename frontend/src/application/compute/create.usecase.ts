@@ -19,7 +19,7 @@ export const requestCreateInstance = ({
   computeRepo,
 }: RequestCreateInstanceDeps): IRequestCreateInstanceUseCase => ({
   execute: async (params) => {
-    // アプリケーション層でRepository結果をユースケース結果へ写像する。
+
     const res = await computeRepo.createInstance(params);
 
     if (!res.success) {
