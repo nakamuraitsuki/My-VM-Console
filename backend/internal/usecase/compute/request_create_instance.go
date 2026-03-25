@@ -105,15 +105,15 @@ func (i *requestCreateInstanceInteractor) Execute(
 	log.Printf("[RequestCreateInstance] starting unit of work")
 	uowErr := i.uow.Do(ctx, func(ctx context.Context) error {
 		// インスタンスを置くVPCを取得する
-		if req.VPCID != nil {
-			log.Printf("[RequestCreateInstance] loading vpc vpcID=%s", *req.VPCID)
-			vpc, err := i.networkRepo.FindVPCByID(ctx, *req.VPCID)
+		if req.VPCID == nil {
+			log.Printf("[RequestCreateInstance] loading vpc vpcID=%v", req.VPCID)
+			vpc, err := i.networkRepo.FindVPCByUserID(ctx, usr.ID())
 			if err != nil {
-				log.Printf("[RequestCreateInstance] failed: FindVPCByID vpcID=%s err=%v", *req.VPCID, err)
+				log.Printf("[RequestCreateInstance] failed: FindVPCByID vpcID=%v err=%v", req.VPCID, err)
 				return err
 			}
 			if vpc == nil {
-				log.Printf("[RequestCreateInstance] failed: vpc not found vpcID=%s", *req.VPCID)
+				log.Printf("[RequestCreateInstance] failed: vpc not found vpcID=%v", req.VPCID)
 				return network.ErrVPCNotFound
 			}
 			log.Printf("[RequestCreateInstance] vpc loaded vpcID=%s name=%s", vpc.ID(), vpc.Name())
@@ -149,7 +149,7 @@ func (i *requestCreateInstanceInteractor) Execute(
 			}
 			log.Printf("[RequestCreateInstance] ip selected subnet=%s ip=%s", targetSubnet.ID(), IPAddress)
 		} else {
-			log.Printf("[RequestCreateInstance] subnet selection: auto by vpc=%s", *req.VPCID)
+			log.Printf("[RequestCreateInstance] subnet selection: auto by vpc=%v", req.VPCID)
 			subnets, err := i.networkRepo.FindSubnetsByVPCID(ctx, *req.VPCID)
 			if err != nil || len(subnets) == 0 {
 				log.Printf("[RequestCreateInstance] failed: FindSubnetsByVPCID vpc=%s count=%d err=%v", *req.VPCID, len(subnets), err)
