@@ -2,6 +2,7 @@ import { useState } from 'react';
 import styles from "./Dashboard.module.css";
 import { CreateInstanceModal } from "@/features/compute/create";
 import { IconButton } from "@/ui/IconButton/IconButton";
+import { IoMdAdd } from 'react-icons/io';
 
 /**
  * ダッシュボードページ
@@ -19,7 +20,7 @@ export const DashboardPage = () => {
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>インスタンス管理</h2>
             <IconButton
-              icon="+"
+              icon={<IoMdAdd size={24} />}
               label="新規作成"
               onClick={() => setIsModalOpen(true)}
             />
