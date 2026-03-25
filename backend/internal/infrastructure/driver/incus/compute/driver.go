@@ -1,8 +1,11 @@
 package compute
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"strings"
 
 	"example.com/m/internal/domain/compute"
 	"example.com/m/internal/domain/image"
@@ -24,15 +27,25 @@ func NewDriver(c incus.InstanceServer) compute.ComputeDriver {
 func (d *driver) Create(ctx context.Context, inst *compute.Instance, img *image.Image) error {
 	// 共通ルール
 	bridgeName := network.IDToResourceName(string(inst.SubnetID()))
-	vpcClient := d.client.UseProject(string(inst.VPCID())) 
+	vpcClient := d.client.UseProject(string(inst.VPCID()))
+
+	// Defaultのユーザーを作成しておく。
+	userData := `#cloud-config
+users:
+  - name: default
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+`
 
 	// instance put
 	put := api.InstancePut{
 		Profiles: []string{"default"},
 		Config: map[string]string{
-			"limits.cpu":    fmt.Sprintf("%d", inst.CPU()),
-			"limits.memory": fmt.Sprintf("%dMiB", inst.MemoryMB()),
-			"user.owner":    string(inst.OwnerID()),
+			"limits.cpu":     fmt.Sprintf("%d", inst.CPU()),
+			"limits.memory":  fmt.Sprintf("%dMiB", inst.MemoryMB()),
+			"user.user-data": userData,
+			"user.owner":     string(inst.OwnerID()),
 		},
 		Devices: map[string]map[string]string{
 			"eth0": {
@@ -126,6 +139,63 @@ func (d *driver) Terminate(ctx context.Context, inst *compute.Instance) error {
 		return fmt.Errorf("error while waiting for instance deletion: %w", err)
 	}
 	return nil
+}
+
+func (d *driver) AuthorizePublicKey(ctx context.Context, inst *compute.Instance, publicKey string) error {
+	vpcClient := d.client.UseProject(string(inst.VPCID()))
+	instanceName := string(inst.ID())
+	path := "/home/default/.ssh/authorized_keys"
+
+	var currentKeys string
+
+	// 1. 現在の authorized_keys を取得
+	content, _, err := vpcClient.GetInstanceFile(instanceName, path)
+	if err != nil {
+		return err
+	}
+	defer content.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, content)
+	if err != nil {
+		// ファイルが存在しない（ディレクトリがまだない等）場合は空として扱う
+		currentKeys = ""
+	}
+
+	// 冪等性のチェック
+	trimmedKey := strings.TrimSpace(publicKey)
+	if strings.Contains(currentKeys, trimmedKey) {
+		return nil // 既に存在すれば何もしない
+	}
+
+	// 追記
+	var sb strings.Builder
+	// 既存キー丸うつし
+	sb.WriteString(strings.TrimRight(currentKeys, "\n"))
+	if sb.Len() > 0 {
+		sb.WriteString("\n")
+	}
+	// 新しいキーを追加
+	sb.WriteString(trimmedKey)
+	sb.WriteString("\n")
+
+	// 書き戻し
+	args := incus.InstanceFileArgs{
+		Content:   strings.NewReader(sb.String()),
+		Mode:      0600, // defaultユーザーが所有者であることを前提としたパーミッション
+		Type:      "file",
+		WriteMode: "overwrite",
+	}
+	// UID/GIDをdefaultユーザー(通常1000)に合わせる必要があるかも
+	args.UID = 1000
+	args.GID = 1000
+
+	return vpcClient.CreateInstanceFile(instanceName, path, args)
+}
+
+// TODO: 実装
+func (d *driver) RevokePublicKey(ctx context.Context, inst *compute.Instance, publicKey string) error {
+	panic("not implemented")
 }
 
 // 本当にわけがわからなくなったときのリカバリ用。物理とDBの整合性を取りに行く
