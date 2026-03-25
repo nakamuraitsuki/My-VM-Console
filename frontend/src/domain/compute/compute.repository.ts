@@ -27,5 +27,5 @@ export interface IComputeRepository {
   /**
    * インスタンス列挙
    */
-  listMine(): Promise<Result<Instance[], ComputeError>>;
+  listMine(): Promise<Result<Instance[] | null, ComputeError>>;
 }
