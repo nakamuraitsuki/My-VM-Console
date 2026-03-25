@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router"
 import { MainLayout } from "./MainLayout"
-import { HomePage, LoginPage, DashboardPage } from "./pages"
+import { HomePage, LoginPage, DashboardPage, InstanceDetailPage } from "./pages"
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +18,10 @@ export const router = createBrowserRouter([
       {
         path: "/dashboard",
         element: <DashboardPage />,
+      },
+      {
+        path: "/dashboard/instances/:instanceId",
+        element: <InstanceDetailPage />,
       },
       {
         path: "*",

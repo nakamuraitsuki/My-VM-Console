@@ -29,6 +29,13 @@
   border: 1px solid var(--color-border);
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .sectionTitle {
   font-size: 1.25rem;
   font-weight: 600;

@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import styles from "./Dashboard.module.css";
 import { CreateInstanceModal } from "@/features/compute/create";
+import { ListMine } from "@/features/compute/dashboard";
 import { IconButton } from "@/ui/IconButton/IconButton";
 import { IoMdAdd } from 'react-icons/io';
+import { useNavigate } from 'react-router';
 
 /**
  * ダッシュボードページ
  */
 export const DashboardPage = () => {
-  // 2. モーダルの開閉状態を定義
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -25,6 +27,13 @@ export const DashboardPage = () => {
               onClick={() => setIsModalOpen(true)}
             />
           </div>
+
+          <ListMine
+            onSelect={(instanceId) => {
+              navigate(`/dashboard/instances/${instanceId}`);
+            }}
+          />
+
           <CreateInstanceModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
