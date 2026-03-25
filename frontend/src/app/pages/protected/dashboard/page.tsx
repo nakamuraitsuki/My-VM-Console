@@ -1,5 +1,5 @@
 import styles from "./Dashboard.module.css";
-import { CreateInstanceButton } from "@/features/compute";
+import { CreateInstanceButton } from "@/features/compute/create";
 
 /**
  * ダッシュボードページ
