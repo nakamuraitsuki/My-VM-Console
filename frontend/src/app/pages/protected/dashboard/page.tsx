@@ -1,24 +1,34 @@
+import { useState } from 'react';
 import styles from "./Dashboard.module.css";
-import { CreateInstanceButton } from "@/features/compute/create";
+import { CreateInstanceModal } from "@/features/compute/create";
+import { IconButton } from "@/ui/IconButton/IconButton";
 
 /**
  * ダッシュボードページ
- * 複数 feature の集約点
  */
 export const DashboardPage = () => {
+  // 2. モーダルの開閉状態を定義
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div className={styles.container}>
       <div className={styles.content}>
         <h1 className={styles.title}>Dashboard</h1>
 
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>インスタンス管理</h2>
-          <CreateInstanceButton
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>インスタンス管理</h2>
+            <IconButton
+              icon="+"
+              label="新規作成"
+              onClick={() => setIsModalOpen(true)}
+            />
+          </div>
+          <CreateInstanceModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
             onSuccess={(instanceId: string) => {
-              console.log('インスタンス作成成功:', instanceId);
-            }}
-            onError={(error: string) => {
-              console.error('インスタンス作成失敗:', error);
+              console.log('作成開始:', instanceId);
             }}
           />
         </section>

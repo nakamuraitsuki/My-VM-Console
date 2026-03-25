@@ -1,2 +1,1 @@
-export { CreateInstanceButton } from './ui/CreateInstanceButton';
-export { useCreateInstance } from './hooks/useCreateInstance';
+export { CreateInstanceModal } from './ui/CreateInstanceModal';
