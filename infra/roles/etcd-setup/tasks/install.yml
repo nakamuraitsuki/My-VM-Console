@@ -8,7 +8,7 @@
 - name: Download and unarchive etcd
   ansible.builtin.unarchive:
     src: "{{ etcd_download_url }}"
-    dest: "{{ etcd_tmp_dir }}"
+    dest: "{{ tmp_dir }}"
     remote_src: yes
     creates: "{{ etcd_tmp_dir }}/etcd"
 

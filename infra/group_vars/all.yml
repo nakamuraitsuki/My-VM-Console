@@ -1,4 +1,6 @@
 ---
+tmp_dir: "/tmp"
+
 ovn_uplink_nic: "ovn-dummy"
 ovn_uplink_ip: "10.0.0.1/8"    # ホスト側の待ち受けIP
 vpc_global_route: "10.0.0.0/8"    # 全てのVPCが収まる大きな枠
