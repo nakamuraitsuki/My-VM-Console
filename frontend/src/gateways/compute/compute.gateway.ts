@@ -63,9 +63,12 @@ export class ComputeGateway implements IComputeRepository {
     }
   }
 
-  async listMine(): Promise<Result<Instance[], ComputeError>> {
+  async listMine(): Promise<Result<Instance[] | null, ComputeError>> {
     try {
       const response = await apiClient.get<ListMineResponseItem[]>('/api/users/me/instances');
+      if (!response.data || response.data.length === 0) {
+        return success(null); // インスタンスがない場合はnullを返す
+      }
       const instances = response.data.map((data) => ({
         id: createInstanceID(data.id),
         name: data.name,
