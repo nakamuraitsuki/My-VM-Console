@@ -12,6 +12,7 @@ require (
 	github.com/lxc/incus/v6 v6.22.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	go.etcd.io/etcd/client/v3 v3.6.8
+	golang.org/x/crypto v0.48.0
 	modernc.org/sqlite v1.46.1
 )
 
@@ -72,7 +73,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
