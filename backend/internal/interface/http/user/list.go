@@ -19,15 +19,19 @@ func (h *Handler) ListMine(c echo.Context) error {
 		return echo.NewHTTPError(500, "インスタンスの取得に失敗しました")
 	}
 
-	res := make([]ListMineResponse, len(instances))
-	for i, instance := range instances {
-		res[i] = ListMineResponse{
+	res := make([]ListMineResponse, 0, len(instances))
+	for _, instance := range instances {
+		if instance == nil || instance.ID() == "" {
+			continue
+		}
+
+		res = append(res, ListMineResponse{
 			ID:        string(instance.ID()),
 			Name:      instance.Name(),
 			Status:    string(instance.Status()),
 			SubnetID:  string(instance.SubnetID()),
 			PrivateIP: string(instance.PrivateIP()),
-		}
+		})
 	}
 	return c.JSON(200, res)
 }
