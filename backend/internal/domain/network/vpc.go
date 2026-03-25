@@ -1,6 +1,14 @@
 package network
 
-import "github.com/google/uuid"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
+
+var (
+	ErrVPCNotFound = errors.New("VPC not found")
+)
 
 type VPCID string
 

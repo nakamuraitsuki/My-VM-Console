@@ -10,7 +10,7 @@ import (
 type CreateReq struct {
 	Name     string  `json:"name"`
 	ImageID  string  `json:"image_id"`
-	VPCID    string  `json:"vpc_id"`
+	VPCID    *string  `json:"vpc_id"`
 	SubnetID *string `json:"subnet_id,omitempty"`
 	Cpu      int     `json:"cpu"`
 	Memory   int     `json:"memory"`
@@ -35,11 +35,16 @@ func (h *Handler) CreateInstance(c echo.Context) error {
 		sid := network.SubnetID(*req.SubnetID)
 		subnetID = &sid
 	}
+	var vpcID *network.VPCID
+	if req.VPCID != nil {
+		vid := network.VPCID(*req.VPCID)
+		vpcID = &vid
+	}
 
 	result, err := h.reqCreateUseCase.Execute(c.Request().Context(), compute.RequestCreateInstanceInput{
 		Name:     req.Name,
 		ImageID:  image.ImageID(req.ImageID),
-		VPCID:    network.VPCID(req.VPCID),
+		VPCID:    vpcID,
 		SubnetID: subnetID,
 		CPU:      req.Cpu,
 		Memory:   req.Memory,

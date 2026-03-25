@@ -16,7 +16,7 @@ export type ComputeError =
 export interface CreateInstanceRequest {
   name: string;
   imageId: ImageID;
-  vpcId: VPCID;
+  vpcId?: VPCID;
   subnetId?: SubnetID;
   cpu: number;
   memory: number;
