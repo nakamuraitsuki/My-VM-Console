@@ -5,6 +5,7 @@ import { ListMine } from "@/features/compute/dashboard";
 import { IconButton } from "@/ui/IconButton/IconButton";
 import { IoMdAdd } from 'react-icons/io';
 import { useNavigate } from 'react-router';
+import type { AppRoute } from '@/app/router';
 
 /**
  * ダッシュボードページ
@@ -45,4 +46,10 @@ export const DashboardPage = () => {
       </div>
     </div>
   );
+};
+
+export const route: AppRoute = {
+  path: "/dashboard",
+  element: <DashboardPage />,
+  meta: { name: "dashboard", requiresAuth: true },
 };

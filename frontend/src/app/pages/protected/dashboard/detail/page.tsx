@@ -1,3 +1,4 @@
+import type { AppRoute } from "@/app/router";
 import { useParams } from "react-router";
 import styles from "./InstanceDetail.module.css";
 
@@ -19,4 +20,10 @@ export const InstanceDetailPage = () => {
       </section>
     </div>
   );
+};
+
+export const route: AppRoute = {
+  path: "/dashboard/instances/:instanceId",
+  element: <InstanceDetailPage />,
+  meta: { name: "instance-detail", requiresAuth: true },
 };

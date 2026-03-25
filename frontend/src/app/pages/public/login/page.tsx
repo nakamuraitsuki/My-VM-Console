@@ -1,3 +1,4 @@
+import type { AppRoute } from "@/app/router";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
@@ -17,4 +18,10 @@ export const LoginPage = () => {
   }, [session.status]);
 
   return <div>Logging in...</div>;
+};
+
+export const route: AppRoute = {
+  path: "/login",
+  element: <LoginPage />,
+  meta: { name: "login" },
 };
