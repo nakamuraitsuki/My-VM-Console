@@ -6,16 +6,19 @@ import (
 )
 
 type Handler struct {
-	reqCreateUseCase  compute.RequestCreateInstanceUseCase
-	ensureUserUseCase user.EnsureUserUseCase
+	reqCreateUseCase    compute.RequestCreateInstanceUseCase
+	ensureUserUseCase   user.EnsureUserUseCase
+	authorizeKeyUseCase compute.AuthorizePubkeyUseCase
 }
 
 func NewHandler(
 	reqCreateUseCase compute.RequestCreateInstanceUseCase,
 	ensureUserUseCase user.EnsureUserUseCase,
+	authorizeKeyUseCase compute.AuthorizePubkeyUseCase,
 ) *Handler {
 	return &Handler{
-		reqCreateUseCase:  reqCreateUseCase,
-		ensureUserUseCase: ensureUserUseCase,
+		reqCreateUseCase:    reqCreateUseCase,
+		ensureUserUseCase:   ensureUserUseCase,
+		authorizeKeyUseCase: authorizeKeyUseCase,
 	}
 }

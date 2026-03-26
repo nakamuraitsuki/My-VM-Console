@@ -83,6 +83,7 @@ func main() {
 	ensureUserUC := userUC.NewEnsureUserInteractor(userRepo, netRepo, identitySvc, netCalcuSvc, publisher, uow)
 	listMyInstanceUC := userUC.NewListMyInstanceInteractor(instRepo)
 	provisioningNetUC := networkUC.NewProvisioningNetworkInteractor(userRepo, netRepo, netCalcuSvc, identitySvc, netDriver, uow)
+	authorizePubKeyUC := computeUC.NewAuthorizePubKeyInteractor(instRepo, instDriver)
 	reqCreateUC := computeUC.NewRequestCreateInstanceInteractor(userRepo, instRepo, netRepo, ingressRepo, volRepo, netCalcuSvc, publisher, uow)
 	execCreateUC := computeUC.NewExecuteCreateInstanceInteractor(instRepo ,netRepo, volRepo, ingressRepo, imgRepo, instDriver, volDriver, ingressDriver, uow)
 	seedImageUC := imageUC.NewSeedImageUseCase(imgRepo)
@@ -93,7 +94,7 @@ func main() {
 
 	// handler
 	userHandler := userH.NewHandler(oidcCfg, *oidcVerifier, ensureUserUC, listMyInstanceUC)
-	computeHandler := computeH.NewHandler(reqCreateUC, ensureUserUC)
+	computeHandler := computeH.NewHandler(reqCreateUC, ensureUserUC, authorizePubKeyUC)
 	sshCaHandler := access.NewHandler(signer)
 
 	// bind job handlers
