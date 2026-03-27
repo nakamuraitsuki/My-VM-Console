@@ -1,7 +1,7 @@
 import type { Result } from "../core/result";
 import type { RawPublicKey, SignedCertificate } from "./key.model";
 
-type KeyError =
+export type KeyError =
   | 'INVALID_PUBLIC_KEY'
   | 'UNAUTHORIZED'
   | 'RESOURCE_NOT_FOUND'
