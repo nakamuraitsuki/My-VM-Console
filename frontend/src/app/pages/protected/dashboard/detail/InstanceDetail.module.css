@@ -16,6 +16,16 @@
   color: var(--color-text-secondary);
 }
 
+.section {
+  margin-top: 2rem;
+}
+
+.sectionTitle {
+  font-size: 1.05rem;
+  margin: 0 0 1rem 0;
+  color: var(--color-text-primary);
+}
+
 .placeholderSection {
   margin-top: 1.5rem;
   border: 1px solid var(--color-border);
@@ -24,13 +34,18 @@
   padding: 1rem 1.25rem;
 }
 
-.sectionTitle {
-  margin: 0;
-  font-size: 1.05rem;
-}
-
 .list {
   margin: 0.75rem 0 0;
   padding-left: 1.25rem;
   color: var(--color-text-secondary);
+}
+
+.error {
+  color: #c33;
+  font-size: 0.95rem;
+}
+
+.muted {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
 }

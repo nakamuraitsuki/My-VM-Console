@@ -13,7 +13,7 @@ export class KeyGateway implements IKeyRepository {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ publicKey }),
+        body: JSON.stringify({ public_key: publicKey }),
       });
 
       if (!response.ok) {
@@ -23,7 +23,7 @@ export class KeyGateway implements IKeyRepository {
       }
 
       const data = await response.json();
-      const signedCert = data.signedCertificate as string;
+      const signedCert = data.certificate as string;
       return success(signedCert as SignedCertificate);
     } catch (error) {
       console.error('Error signing certificate:', error);
@@ -33,19 +33,31 @@ export class KeyGateway implements IKeyRepository {
 
   async authorizePublicKey(instanceId: string, publicKey: RawPublicKey): Promise<Result<void, KeyError>> {
     try {
-      const response = await fetch(`/api/ssh-ca/instances/authorize-key`, {
+      const response = await fetch(`/api/computes/instances/authorize-key`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          instanceId,
-          publicKey
+        body: JSON.stringify({
+          instance_id: instanceId,
+          pub_key: publicKey
         }),
       });
 
       if (!response.ok) {
-        const errorType: KeyError = response.status === 400 ? 'INVALID_PUBLIC_KEY' : 'SERVER_ERROR';
+        let errorType: KeyError = 'SERVER_ERROR';
+
+        // HTTPステータスコードに応じたエラーマッピング
+        if (response.status === 400) {
+          errorType = 'INVALID_PUBLIC_KEY';
+        } else if (response.status === 401) {
+          errorType = 'UNAUTHORIZED';
+        } else if (response.status === 403) {
+          errorType = 'UNAUTHORIZED';
+        } else if (response.status === 404) {
+          errorType = 'RESOURCE_NOT_FOUND';
+        }
+
         return failure(errorType);
       }
 
@@ -53,7 +65,6 @@ export class KeyGateway implements IKeyRepository {
     } catch (error) {
       console.error('Error authorizing public key:', error);
       return failure('NETWORK_ERROR');
-
     }
   }
 }

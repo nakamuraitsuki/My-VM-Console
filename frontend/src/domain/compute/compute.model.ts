@@ -18,6 +18,10 @@ export interface Instance {
   privateIp: string;
 }
 
+export interface InstanceDetail extends Instance {
+  subdomains: string[];
+}
+
 
 
 // 型ガード関数

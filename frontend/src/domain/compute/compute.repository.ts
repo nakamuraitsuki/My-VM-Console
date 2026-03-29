@@ -1,5 +1,5 @@
 import type { Result } from '../core/result';
-import type { ImageID, Instance, SubnetID, VPCID } from './compute.model';
+import type { ImageID, Instance, InstanceDetail, SubnetID, VPCID } from './compute.model';
 
 export type ComputeError =
   | 'INVALID_REQUEST'
@@ -28,4 +28,8 @@ export interface IComputeRepository {
    * インスタンス列挙
    */
   listMine(): Promise<Result<Instance[] | null, ComputeError>>;
+  /**
+   * インスタンス詳細取得
+   */
+  getByID(instanceId: string): Promise<Result<InstanceDetail, ComputeError>>;
 }

@@ -2,7 +2,7 @@ import { apiClient } from '../../api/client';
 import type { Result } from '../../domain/core/result';
 import { success, failure } from '../../domain/core/result';
 import type { IComputeRepository, ComputeError, CreateInstanceRequest } from '../../domain/compute/compute.repository';
-import type { Instance } from '../../domain/compute/compute.model';
+import type { Instance, InstanceDetail } from '../../domain/compute/compute.model';
 import {
   createInstanceID,
   createSubnetID,
@@ -27,6 +27,15 @@ interface ListMineResponseItem {
   status: string;
   subnetId: string;
   privateIp: string;
+}
+
+interface GetInstanceResponseItem {
+  id: string;
+  name: string;
+  status: string;
+  subnetId: string;
+  privateIp: string;
+  subdomains: string[];
 }
 
 /**
@@ -79,6 +88,27 @@ export class ComputeGateway implements IComputeRepository {
       return success(instances);
     } catch (error) {
       console.error('Failed to list instances:', error);
+      return failure(this.mapError(error));
+    }
+  }
+
+  async getByID(instanceId: string): Promise<Result<InstanceDetail, ComputeError>> {
+    try {
+      const response = await apiClient.get<GetInstanceResponseItem>(`/api/computes/instances/${instanceId}`);
+      const data = response.data;
+
+      const detail: InstanceDetail = {
+        id: createInstanceID(data.id),
+        name: data.name,
+        status: data.status as InstanceStatus,
+        subnetId: createSubnetID(data.subnetId),
+        privateIp: data.privateIp,
+        subdomains: data.subdomains,
+      };
+
+      return success(detail);
+    } catch (error) {
+      console.error('Failed to fetch instance detail:', error);
       return failure(this.mapError(error));
     }
   }
