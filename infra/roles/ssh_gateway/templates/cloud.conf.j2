@@ -5,8 +5,8 @@ AuthorizedPrincipalsFile /etc/ssh/principals/%u
 
 Match User {{ jump_user_name | default('jumpuser') }}
     AllowTcpForwarding yes
+    PermitTTY no
     X11Forwarding no
     PermitTunnel no
-    AllowAgentForwarding yes
-    ForceCommand /usr/bin/false
+    AllowAgentForwarding no
     PasswordAuthentication no

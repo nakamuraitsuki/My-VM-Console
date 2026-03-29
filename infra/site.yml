@@ -36,6 +36,10 @@
     # ネットワークの構築
     - role: incus-ovn-uplink
       tags: [network, incus, ovn, uplink]
+    
+    # Resolvedの設定
+    - role: systemd-resolved-setup
+      tags: [systemd, resolved]
 
     - role: app-backend
       tags: [app, backend]

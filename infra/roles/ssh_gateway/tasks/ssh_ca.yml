@@ -16,13 +16,13 @@
 
 - name: Create Auth Principals directory
   ansible.builtin.file:
-    path: /etc/ssh/auth_principals
+    path: /etc/ssh/principals
     state: directory
     mode: '0755'
 
 - name: Define allowed principals for jumpuser
   ansible.builtin.copy:
-    dest: /etc/ssh/auth_principals/{{ jump_user_name | default('jumpuser') }}
+    dest: /etc/ssh/principals/{{ jump_user_name | default('jumpuser') }}
     content: "{{ jump_user_name | default('jumpuser') }}"
 
 - name: Deploy Modular SSHD Config

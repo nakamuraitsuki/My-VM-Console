@@ -52,13 +52,21 @@ func (s *signer) SignCertificate(pubKeyBytes []byte) (string, error) {
 		// 2時間前から24時間後まで有効な証明書を発行する
 		// 期間設定については、のちに検討したいが、どうせ権限のないユーザーが踏み台なので、
 		// 利便性を損なわない長めの期間にするのでよさそう
-		ValidAfter:      uint64(now.Add(-2 * time.Hour).Unix()),
-		ValidBefore:     uint64(now.Add(24 * time.Hour).Unix()),
+		ValidAfter:  uint64(now.Add(-2 * time.Hour).Unix()),
+		ValidBefore: uint64(now.Add(24 * time.Hour).Unix()),
+		Permissions: ssh.Permissions{
+			Extensions: map[string]string{
+				"permit-pty":              "", // ターミナル操作
+				"permit-port-forwarding":  "", // ProxyJump
+				"permit-agent-forwarding": "", // エージェント転送
+				"permit-user-rc":          "",
+			},
+		},
 	}
 
 	if err := cert.SignCert(rand.Reader, s.caSigner); err != nil {
 		return "", err
 	}
-	
+
 	return string(ssh.MarshalAuthorizedKey(cert)), nil
 }
