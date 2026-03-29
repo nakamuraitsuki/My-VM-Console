@@ -7,7 +7,7 @@ import (
 // NOTE: 中間層の認証スキップのために導入しているので、Principalsなどは固定する。
 //	サーバーセットアップ時に、ジャンプ用に権限を絞ったユーザーが作成されていることを期待する
 type SignRequest struct {
-	PublicKey []byte `json:"public_key"`
+	PublicKey string `json:"public_key"`
 }
 
 func (h *Handler) Sign(c echo.Context) error {

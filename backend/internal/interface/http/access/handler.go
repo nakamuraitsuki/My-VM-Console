@@ -12,6 +12,6 @@ type Handler struct {
 	ensureUserUseCase user.EnsureUserUseCase
 }
 
-func NewHandler(signer Signer) *Handler {
-	return &Handler{signer: signer}
+func NewHandler(signer Signer, ensureUserUseCase user.EnsureUserUseCase) *Handler {
+	return &Handler{signer: signer, ensureUserUseCase: ensureUserUseCase}
 }

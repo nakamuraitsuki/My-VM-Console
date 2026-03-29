@@ -51,6 +51,9 @@ func (i *getInstanceInteractor) Execute(ctx context.Context, input GetInstanceIn
 	if err != nil {
 		return nil, err
 	}
+	if inst == nil {
+		return nil, compute.ErrInstanceNotFound
+	}
 
 	if inst.OwnerID() != usr.ID() {
 		usr.HasPermission(user.PermissionInstanceRead)

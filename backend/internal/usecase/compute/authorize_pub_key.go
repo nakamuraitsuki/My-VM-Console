@@ -2,6 +2,7 @@ package compute
 
 import (
 	"context"
+	"log"
 
 	"example.com/m/internal/domain/compute"
 	"example.com/m/internal/domain/user"
@@ -58,6 +59,7 @@ func (i *authorizePubKeyInteractor) Execute(ctx context.Context, input Authorize
 
 	// 公開鍵の登録
 	if err := i.instanceDriver.AuthorizePublicKey(ctx, inst, input.PubKey); err != nil {
+		log.Printf("[AuthorizePubKey] failed: AuthorizePublicKey instanceID=%s err=%v", input.InstanceID, err)
 		return err
 	}
 	return nil

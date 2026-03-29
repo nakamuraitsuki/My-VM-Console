@@ -7,5 +7,6 @@ import (
 
 func (h *Handler) RegisterRoutes(e *echo.Group) {
 	e.POST("/instances", h.CreateInstance, middleware.AuthMiddleware(h.ensureUserUseCase))
+	e.GET("/instances/:instance_id", h.GetInstance, middleware.AuthMiddleware(h.ensureUserUseCase))
 	e.POST("/instances/authorize-key", h.AuthorizePubKey, middleware.AuthMiddleware(h.ensureUserUseCase))
 }

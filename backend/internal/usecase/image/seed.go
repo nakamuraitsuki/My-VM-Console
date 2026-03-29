@@ -8,7 +8,7 @@ import (
 
 // VMのイメージ初期データ
 var seedImages = []*image.Image{
-	image.NewImage("img-ubuntu-2404", "ubuntu/24.04", "", "https://images.linuxcontainers.org", "simplestreams", true),
+	image.NewImage("img-ubuntu-2404", "ubuntu/24.04/cloud", "", "https://images.linuxcontainers.org", "simplestreams", true),
 	// 他のイメージ...
 }
 
