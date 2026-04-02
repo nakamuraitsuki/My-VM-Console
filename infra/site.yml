@@ -10,7 +10,7 @@
   become: yes
   roles:
     # 物理ネットワーク系
-    - role: host-network-setup
+    - role: host_network_setup
       tags: [network, host]
 
     # SSH Gateway
@@ -18,30 +18,30 @@
       tags: [ssh]
 
     # 必要なソフトウェアのインストール
-    - role: zfs-setup
+    - role: zfs_setup
       tags: [zfs]
-    - role: ovn-setup
+    - role: ovn_setup
       tags: [ovn]
-    - role: incus-setup
+    - role: incus_setup
       tags: [incus]
-    - role: nginx-setup
+    - role: nginx_setup
       tags: [nginx]
-    - role: sqlite-setup
+    - role: sqlite_setup
       tags: [sqlite]
-    - role: etcd-setup
+    - role: etcd_setup
       tags: [etcd]
-    - role: coredns-setup
+    - role: coredns_setup
       tags: [coredns]
 
     # ネットワークの構築
-    - role: incus-ovn-uplink
+    - role: incus_ovn_uplink
       tags: [network, incus, ovn, uplink]
     
     # Resolvedの設定
-    - role: systemd-resolved-setup
+    - role: systemd_resolved_setup
       tags: [systemd, resolved]
 
-    - role: app-backend
+    - role: app_backend
       tags: [app, backend]
-    - role: app-frontend
+    - role: app_frontend
       tags: [app, frontend]
