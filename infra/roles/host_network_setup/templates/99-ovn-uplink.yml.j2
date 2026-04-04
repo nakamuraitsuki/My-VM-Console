@@ -1,0 +1,10 @@
+network:
+  version: 2
+  renderer: networkd
+
+  dummy-devices:
+    {{ uplink_host_if }}:
+      addresses:
+        - {{ ovn_uplink_ip }}
+      mtu: {{ uplink_mtu | default(1500) }}
+      optional: true

@@ -5,7 +5,16 @@ storage_pools:
   driver: zfs
   config:
     size: {{ incus_storage_size | default('20GiB') }}
-# Networkについては後でuplink(physical)が登場するので、設定をしない
+
+networks:
+- name: incusbr0
+  type: bridge
+  config:
+    # OVNの10.0.0.0/8とも、BGPの192.168.100.0/24とも被らない
+    ipv4.address: 172.16.254.1/24
+    ipv4.nat: "true"
+    ipv6.address: none
+
 profiles:
 - name: default
   devices:
@@ -13,3 +22,7 @@ profiles:
       path: /
       pool: default
       type: disk
+    eth0:
+      name: eth0
+      network: incusbr0
+      type: nic

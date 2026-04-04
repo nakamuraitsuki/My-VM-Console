@@ -1,0 +1,17 @@
+frr version 8.4
+frr defaults traditional
+hostname frr-host
+log syslog
+
+router bgp {{ host_bgp_asn }}
+  bgp router-id {{ global_ip }}
+  no bgp ebgp-requires-policy
+
+  neighbor CONTAINER peer-group
+  neighbor CONTAINER remote-as {{ container_bgp_asn }}
+
+  neighbor CONTAINER neighbor {{ bgp_router_ip.split('/')[0] }} peer-group
+
+  address-family ipv4 unicast
+    neighbor CONTAINER activate
+  exit-address-family

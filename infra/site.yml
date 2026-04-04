@@ -41,6 +41,12 @@
     - role: systemd_resolved_setup
       tags: [systemd, resolved]
 
+    # BGPの設定
+    - role: incus_bgp_speaker
+      tags: [bgp, incus]
+    - role: frr_server_setup
+      tags: [bgp, incus, frr]
+
     - role: app_backend
       tags: [app, backend]
     - role: app_frontend

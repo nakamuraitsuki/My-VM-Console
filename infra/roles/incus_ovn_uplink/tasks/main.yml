@@ -2,7 +2,7 @@
 # cf. https://incus-ja.readthedocs.io/ja/latest/howto/network_ovn_setup/#network-ovn-setup
 #     https://linuxcontainers.org/incus/docs/main/reference/network_physical/#network-physical
 - name: Check if OVN uplink exists
-  ansible.builtin.command: "incus network show {{ incus_uplink_bridge_name }}"
+  ansible.builtin.command: "incus network show {{ incus_uplink_network }}"
   register: bridge_check
   failed_when: false
   changed_when: false
@@ -10,9 +10,9 @@
 - name: Create shared uplink bridge (physical) for OVN
   ansible.builtin.command:
     cmd: >
-      incus network create {{ incus_uplink_bridge_name }}
+      incus network create {{ incus_uplink_network }}
       --type=physical
-      parent={{ ovn_uplink_nic }}
+      parent={{ uplink_host_if }}
       ipv4.gateway={{ ovn_uplink_ip }}
       ipv4.routes={{ vpc_global_route }}
       ipv4.ovn.ranges={{ incus_ovn_external_range }}
@@ -21,7 +21,7 @@
 - name: Sync uplink bridge (physical) configurations
   ansible.builtin.command:
     cmd: >
-      incus network set {{ incus_uplink_bridge_name }}
+      incus network set {{ incus_uplink_network }}
       ipv4.ovn.ranges={{ incus_ovn_external_range }}
       ovn.ingress_mode=routed
   changed_when: true

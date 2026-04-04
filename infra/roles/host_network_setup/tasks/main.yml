@@ -3,22 +3,17 @@
 - name: Create dummy NIC for OVN uplink
   become: true # 権限必要
   ansible.builtin.shell: |
-    ip link add name {{ ovn_uplink_nic }} type dummy
-    ip link set {{ ovn_uplink_nic }} up
+    ip link add name {{ uplink_host_if }} type dummy
+    ip link set {{ uplink_host_if }} up
   register: create_dummy_result
   changed_when: "'already exists' not in create_dummy_result.stderr"
   tags: [network, host]
 
-# NOTE: physical NIC を uplink にする場合、OVNに全権限を委ねるためにIPアドレスは振ってはいけない
-#       よって、IP設定を意図的にしていない
+# gateway として機能させるため IP アドレスを割り当てる
+- name: Deploy Netplan config for OVN uplink
+  ansible.builtin.template:
+    src: 99-ovn-uplink.yml.j2
+    dest: /etc/netplan/99-ovn-uplink.yml
 
-# VPC全体の帯域へのスタティックルートを追加
-# 先述の理由から、ルート解決は NIC に向けて直接つなげる
-- name: Add Static Route for VPC network range
-  become: true
-  ansible.builtin.shell: |
-    ip route add {{ vpc_global_route }} dev {{ ovn_uplink_nic }} || true
-  register: add_route_result
-  # 'File exists' エラーが出た場合は changed を false にする
-  changed_when: "'exists' not in add_route_result.stderr"
-  tags: [network, host]
+- name: Apply Netplan config
+  ansible.builtin.command: netplan apply

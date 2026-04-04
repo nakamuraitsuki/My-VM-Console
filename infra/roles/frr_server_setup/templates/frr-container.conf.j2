@@ -1,0 +1,22 @@
+frr version 8.4
+frr defaults traditional
+hostname frr-container
+log syslog
+
+router bgp {{ container_bgp_asn }}
+  bgp router-id {{ bgp_router_ip.split('/')[0] }}
+  no bgp ebgp-requires-policy
+
+  neighbor OVN remote-as {{ ovn_bgp_asn }}
+  neighbor OVN neighbor {{ ovn_uplink_ip.split('/')[0] }}
+
+  neighbor HOST peer-group
+  neighbor HOST remote-as {{ host_bgp_asn }}
+  neighbor HOST neighbor {{ ovn_uplink_ip.split('/')[0] }} peer-group
+
+  address-family ipv4 unicast 
+    neighbor OVN activate
+    neighbor HOST activate
+    redistribute connected
+    redistribute kernel
+  exit-address-family

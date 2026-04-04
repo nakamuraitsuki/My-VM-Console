@@ -1,11 +1,21 @@
 ---
 tmp_dir: "/tmp"
-
-ovn_uplink_nic: "ovn-dummy"
-ovn_uplink_ip: "10.0.0.1/8"    # ホスト側の待ち受けIP
-vpc_global_route: "10.0.0.0/8"    # 全てのVPCが収まる大きな枠
-incus_ovn_external_ip: "10.1.0.1"
-
 global_ip: "192.168.56.10"
 global_ip_domain: "my-app.local"
 cloud_domain: "{{ global_ip_domain }}"
+
+# OVN の uplink 関連
+incus_uplink_network: "ovn-uplink"
+uplink_host_if: "uplink0"
+# ホスト側の uplink NIC に当てるIP
+# OVNとして使う予定の10.0.0.0/8の範囲外にしておく
+ovn_uplink_ip: "192.168.100.1/24" 
+vpc_global_route: "10.0.0.0/8"    # 全てのVPCが収まる大きな枠
+
+# BGP関連の設定
+incus_bgp_asn: 65001
+# Container FRRのIP
+bgp_router_ip: "192.168.100.2/24"
+container_bgp_asn: 65002
+# Host
+host_bgp_asn: 65003

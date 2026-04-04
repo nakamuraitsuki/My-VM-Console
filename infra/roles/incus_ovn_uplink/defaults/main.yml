@@ -1,3 +1,2 @@
 ---
-incus_uplink_bridge_name: "ovn-uplink"
 incus_ovn_external_range: "10.1.0.1-10.255.254.254"

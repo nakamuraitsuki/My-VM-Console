@@ -1,0 +1,7 @@
+---
+# https://incus-ja.readthedocs.io/ja/latest/howto/network_bgp/#ovn-bgp
+# ovn-uplink (physical) をfrrに対してのBGPスピーカーにするための設定
+- name: Configure BGP Speaker for OVN Uplink
+  ansible.builtin.command:
+    cmd: "incus network set ovn-uplink bgp.peers.frr.address={{ bgp_router_ip.split('/')[0] }} bgp.peers.frr.asn={{ container_bgp_asn }}"
+  
