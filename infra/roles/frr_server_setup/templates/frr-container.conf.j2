@@ -7,7 +7,7 @@ router bgp {{ container_bgp_asn }}
   bgp router-id {{ bgp_router_ip.split('/')[0] }}
   no bgp ebgp-requires-policy
 
-  neighbor OVN remote-as {{ ovn_bgp_asn }}
+  neighbor OVN remote-as {{ incus_bgp_asn }}
   neighbor OVN neighbor {{ ovn_uplink_ip.split('/')[0] }}
 
   neighbor HOST peer-group

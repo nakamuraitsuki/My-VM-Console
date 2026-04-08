@@ -1,14 +1,5 @@
 ---
 # ovn-uplink (physical) の parent となる interface を作る
-- name: Create dummy NIC for OVN uplink
-  become: true # 権限必要
-  ansible.builtin.shell: |
-    ip link add name {{ uplink_host_if }} type dummy
-    ip link set {{ uplink_host_if }} up
-  register: create_dummy_result
-  changed_when: "'already exists' not in create_dummy_result.stderr"
-  tags: [network, host]
-
 # gateway として機能させるため IP アドレスを割り当てる
 - name: Deploy Netplan config for OVN uplink
   ansible.builtin.template:

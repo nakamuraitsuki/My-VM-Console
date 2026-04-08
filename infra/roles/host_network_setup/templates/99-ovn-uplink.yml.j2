@@ -7,4 +7,4 @@ network:
       addresses:
         - {{ ovn_uplink_ip }}
       mtu: {{ uplink_mtu | default(1500) }}
-      optional: true
+      optional: false

@@ -10,6 +10,7 @@ uplink_host_if: "uplink0"
 # ホスト側の uplink NIC に当てるIP
 # OVNとして使う予定の10.0.0.0/8の範囲外にしておく
 ovn_uplink_ip: "192.168.100.1/24" 
+ovn_uplink_gw_ip: "10.0.0.1/8"
 vpc_global_route: "10.0.0.0/8"    # 全てのVPCが収まる大きな枠
 
 # BGP関連の設定
