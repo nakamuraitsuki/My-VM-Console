@@ -1,7 +1,20 @@
 ---
-# https://incus-ja.readthedocs.io/ja/latest/howto/network_bgp/#ovn-bgp
-# ovn-uplink (physical) をfrrに対してのBGPスピーカーにするための設定
-- name: Configure BGP Speaker for OVN Uplink
+- name: Configure Incus BGP global settings
+  become: true
   ansible.builtin.command:
-    cmd: "incus network set ovn-uplink bgp.peers.frr.address={{ bgp_router_ip.split('/')[0] }} bgp.peers.frr.asn={{ container_bgp_asn }}"
-  
+    cmd: "incus config set {{ item }}"
+  loop:
+    - "core.bgp_address={{ incus_bridge_host_ip | split('/') | first }}:1179"
+    - "core.bgp_asn={{ incus_bgp_asn }}"
+    - "core.bgp_routerid={{ incus_bgp_routerid }}"
+
+
+# https://incus-ja.readthedocs.io/ja/latest/howto/network_bgp/#ovn-bgp
+# IncusのグローバルBGP設定（Hostをネイバーに指定）
+- name: Configure Incus BGP global settings
+  become: true
+  ansible.builtin.command:
+    cmd: "incus network set ovn-uplink {{ item }}"
+  loop:
+    - "bgp.peers.host.address={{ incus_bridge_host_ip | split('/') | first }}"
+    - "bgp.peers.host.asn={{ host_bgp_asn }}"

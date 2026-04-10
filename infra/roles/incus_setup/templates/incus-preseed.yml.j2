@@ -10,8 +10,7 @@ networks:
 - name: incusbr0
   type: bridge
   config:
-    # OVNの10.0.0.0/8とも、BGPの192.168.100.0/24とも被らない
-    ipv4.address: 172.16.254.1/24
+    ipv4.address: {{ incus_bridge_host_ip }}
     ipv4.nat: "true"
     ipv6.address: none
 

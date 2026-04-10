@@ -1,10 +1,12 @@
 ---
 # ovn-uplink (physical) の parent となる interface を作る
 # gateway として機能させるため IP アドレスを割り当てる
+# netplanは.yaml拡張子しか認めないので注意（https://manpages.ubuntu.com/manpages/jammy/man5/netplan.5.html）
 - name: Deploy Netplan config for OVN uplink
   ansible.builtin.template:
     src: 99-ovn-uplink.yml.j2
-    dest: /etc/netplan/99-ovn-uplink.yml
+    dest: /etc/netplan/99-ovn-uplink.yaml
 
 - name: Apply Netplan config
+  become: true
   ansible.builtin.command: netplan apply

@@ -1,10 +1,9 @@
 network:
   version: 2
   renderer: networkd
-
+  # https://linuxcontainers.org/incus/docs/main/reference/network_ovn/
+  # ovn の parent はIPを持ってはいけない 
   dummy-devices:
     {{ uplink_host_if }}:
-      addresses:
-        - {{ ovn_uplink_ip }}
       mtu: {{ uplink_mtu | default(1500) }}
       optional: false

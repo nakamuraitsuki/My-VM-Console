@@ -1,118 +1,48 @@
 ---
-- name: Check if frr-server container exists
-  ansible.builtin.command:
-    cmd: "incus info frr-server"
-  register: container_check
-  failed_when: false
-  changed_when: false
-
-# https://images.linuxcontainers.org/
-# imageリストは上記
-- name: Launch FRR container if not exists
-  ansible.builtin.command:
-    cmd: "incus launch images:ubuntu/22.04 frr-server"
-  when: container_check.rc != 0
-
-- name: Wait for container to be ready
-  ansible.builtin.command:
-    cmd: "incus exec frr-server -- true"
-  retries: 10
-  delay: 2
-  register: result
-  until: result.rc == 0
-
-# Routerとして動作させるために、ホストとOVNネットワークに繋ぐためのNICを追加
-- name: Check if eth1 device exists on frr-server
-  ansible.builtin.command:
-    cmd: "incus config device show frr-server"
-  register: device_check
-  changed_when: false
-
-- name: Join NIC to OVN Uplink Network (if not exists)
-  ansible.builtin.command:
-    cmd: "incus config device add frr-server eth1 nic network={{ incus_uplink_network }}"
-  when: "'eth1:' not in device_check.stdout"
-
-- name: Render FRR NIC config
-  ansible.builtin.template:
-    src: 55-frr-netplan.yml.j2
-    dest: "{{ tmp_dir }}/55-frr-netplan.yml"
-
-- name: Copy FRR NIC config to container
-  ansible.builtin.command:
-    cmd: "incus file push {{ tmp_dir }}/55-frr-netplan.yml frr-server/etc/netplan/55-frr-netplan.yml"
-
-- name: Apply Netplan config in container
-  ansible.builtin.command:
-    cmd: "incus exec frr-server -- netplan apply"
-
-# https://packages.ubuntu.com/jammy/frr
-# jammyなら、frrはaptでインストールできる
-- name: Update packages
-  ansible.builtin.command:
-    cmd: "incus exec frr-server -- apt update"
-
-- name: Install FRR
-  ansible.builtin.command:
-    cmd: "incus exec frr-server -- apt install -y frr"
-
-# FRRのBGP有効化
-- name: Enable bgpd
-  ansible.builtin.command:
-    cmd: "incus exec frr-server -- sed -i 's/bgpd=no/bgpd=yes/' /etc/frr/daemons"
-
-# 設定ファイルを配置する
-- name: Render FRR config 
-  ansible.builtin.template:
-    src: frr-container.conf.j2
-    dest: "{{ tmp_dir }}/frr.conf"
-
-- name: Copy FRR config to container
-  ansible.builtin.command:
-    cmd: "incus file push {{ tmp_dir }}/frr.conf frr-server/etc/frr/frr.conf"
-
-# forwarding設定をする
-# 一時的なコマンド設定や、ファイル配置はいまいちな気がするので、 sysctl.dを介して上書き＋有効化してみる
-- name: Persist IP forwarding via sysctl.d in Container
-  ansible.builtin.command:
-    cmd: >
-      incus exec frr-server -- bash -c "echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/99-forward.conf"
-
-- name: Reload sysctl settings in Container
-  ansible.builtin.command:
-    cmd: >
-      incus exec frr-server -- sysctl --system
-    
-# https://docs.frrouting.org/en/latest/zebra.html
-# FRRのZebraは、ルーティングテーブルの管理やインターフェースの状態監視などを行うコンポーネントらしい
-- name: Enable zebra in Container
-  ansible.builtin.command:
-    cmd: "incus exec frr-server -- sed -i 's/zebra=no/zebra=yes/' /etc/frr/daemons"
-
-- name: Restart FRR in Container
-  ansible.builtin.command:
-    cmd: "incus exec frr-server -- systemctl restart frr"
-
-# HostにもFRRを入れる
+# ホストにFRRをインストール
 - name: Install FRR on Host
+  become: true
   ansible.builtin.apt:
     name: frr
     state: present
     update_cache: yes 
 
-- name: Enable bgpd on Host
-  ansible.builtin.command:
-    cmd: "sed -i 's/bgpd=no/bgpd=yes/' /etc/frr/daemons"
+# FRRのデーモン設定（BGPとZebraを有効化）
+- name: Enable BGP and Zebra daemons on Host
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/frr/daemons
+    regexp: "^{{ item }}=no"
+    line: "{{ item }}=yes"
+  loop:
+    - bgpd
+    - zebra
 
-- name: Enable zebra on Host
-  ansible.builtin.command:
-    cmd: "sed -i 's/zebra=no/zebra=yes/' /etc/frr/daemons"
+# ホストのIPフォワーディングを有効化（VPCへのルーティングに必要）
+# ssh の方でやっているが、Roleとして単体で完結させるためにここでも設定する
+- name: Enable IPv4 forwarding on Host
+  become: true
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: yes
+    state: present
+    reload: yes
 
+# FRR設定ファイルの配置
 - name: Deploy FRR config to Host
+  become: true
   ansible.builtin.template:
     src: frr-host.conf.j2
     dest: /etc/frr/frr.conf
+    owner: frr
+    group: frr
+    mode: '0640'
 
+# FRRサービス再起動
 - name: Restart FRR on Host
-  ansible.builtin.command:
-    cmd: "systemctl restart frr"
+  become: true
+  ansible.builtin.systemd:
+    name: frr
+    state: restarted
+    enabled: yes

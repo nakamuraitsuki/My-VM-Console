@@ -1,17 +1,23 @@
-frr version 8.4
+frr version 8.1
 frr defaults traditional
-hostname frr-host
-log syslog
-
+hostname pve-dev-node
+log syslog informational
+!
 router bgp {{ host_bgp_asn }}
-  bgp router-id {{ global_ip }}
-  no bgp ebgp-requires-policy
+ bgp router-id {{ incus_bridge_host_ip.split('/')[0] }}
 
-  neighbor CONTAINER peer-group
-  neighbor CONTAINER remote-as {{ container_bgp_asn }}
-
-  neighbor CONTAINER neighbor {{ bgp_router_ip.split('/')[0] }} peer-group
-
-  address-family ipv4 unicast
-    neighbor CONTAINER activate
-  exit-address-family
+ neighbor OVN_VPC peer-group
+ neighbor OVN_VPC remote-as {{ incus_bgp_asn }}
+ !
+ ! OVN側（AS 65001）からの接続を incusbr0 のセグメントで待ち受ける
+ bgp listen range 172.16.254.0/24 peer-group OVN_VPC
+ neighbor OVN_VPC remote-as {{ incus_bgp_asn }}
+ !
+ address-family ipv4 unicast
+  neighbor OVN_VPC activate
+  ! VPCから広報されたルート（10.0.0.0/8など）をここで受信する
+  neighbor OVN_VPC route-map ACCEPT_ALL in
+  neighbor OVN_VPC route-map ACCEPT_ALL out
+ exit-address-family
+!
+route-map ACCEPT_ALL permit 10
