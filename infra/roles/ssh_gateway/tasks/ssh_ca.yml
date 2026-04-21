@@ -23,7 +23,8 @@
 - name: Define allowed principals for jumpuser
   ansible.builtin.copy:
     dest: /etc/ssh/principals/{{ jump_user_name | default('jumpuser') }}
-    content: "{{ jump_user_name | default('jumpuser') }}"
+    content: | 
+      {{ jump_user_name | default('jumpuser') }}
 
 - name: Deploy Modular SSHD Config
   ansible.builtin.template:
@@ -31,3 +32,8 @@
     dest: /etc/ssh/sshd_config.d/cloud.conf
     mode: '0644'
   notify: Restart ssh
+
+- name: Force restart ssh to ensure all files are re-read
+  ansible.builtin.service:
+    name: ssh
+    state: restarted

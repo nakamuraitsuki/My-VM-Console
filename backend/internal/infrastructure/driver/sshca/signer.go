@@ -49,10 +49,10 @@ func (s *signer) SignCertificate(pubKeyBytes []byte) (string, error) {
 		CertType:        ssh.UserCert,
 		KeyId:           keyID,
 		ValidPrincipals: []string{s.jumpUser},
-		// 2時間前から24時間後まで有効な証明書を発行する
+		// 24時間前から24時間後まで有効な証明書を発行する
 		// 期間設定については、のちに検討したいが、どうせ権限のないユーザーが踏み台なので、
 		// 利便性を損なわない長めの期間にするのでよさそう
-		ValidAfter:  uint64(now.Add(-2 * time.Hour).Unix()),
+		ValidAfter:  uint64(now.Add(-24 * time.Hour).Unix()),
 		ValidBefore: uint64(now.Add(24 * time.Hour).Unix()),
 		Permissions: ssh.Permissions{
 			Extensions: map[string]string{
